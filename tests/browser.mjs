@@ -347,6 +347,7 @@ try {
 
   /* The clinching check: no word of the sample survives anywhere in storage. */
   const leaked = await page.evaluate(async () => {
+    /* The database keeps its original name through the rename, by design. */
     const open = indexedDB.open('novel-platform');
     const db = await new Promise((res, rej) => {
       open.onsuccess = () => res(open.result); open.onerror = () => rej(open.error);
@@ -426,6 +427,6 @@ try {
   server.close();
 }
 
-console.log('\nNovel Development Platform — browser tests\n');
+console.log('\nWriteline — browser tests\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

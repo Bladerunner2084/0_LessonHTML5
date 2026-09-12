@@ -23,7 +23,7 @@ tells you whether the continuity findings are any good.
 
 ## If you sell the file
 
-**What you list.** `dist/novel-platform.html` — one file, produced by
+**What you list.** `dist/writeline.html` — one file, produced by
 `node build.mjs`. Do not zip it. A zip adds a step and a support email.
 
 **Where.** Gumroad, Payhip and Lemon Squeezy all take a file, a price and a

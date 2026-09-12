@@ -9,7 +9,7 @@
  * That constraint turns out to be the product's best property. Nothing to
  * subscribe to, nothing to log into, and it still opens in ten years.
  *
- *   node build.mjs        ->  dist/novel-platform.html
+ *   node build.mjs        ->  dist/writeline.html
  */
 
 import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
@@ -136,8 +136,8 @@ let html = shell;
 html = put(html, '<link rel="stylesheet" href="assets/css/app.css">', `<style>\n${css}\n  </style>`);
 html = put(html, '<script type="module" src="assets/js/app.js"></script>',
   `<script type="module">\n${RUNTIME}\n\n${bundled}\n\n${entrySource}\n  </script>`);
-html = put(html, '<title>Novel Development Platform</title>',
-  '<title>Novel Development Platform</title>\n  <meta name="robots" content="noindex">');
+html = put(html, '<title>Writeline</title>',
+  '<title>Writeline</title>\n  <meta name="robots" content="noindex">');
 
 /* A literal </script> anywhere in the source would end the block early, so
  * refuse to ship rather than emit a file that half-renders as text. */
@@ -147,10 +147,10 @@ if (scriptBody.slice(0, scriptBody.indexOf('</script>')).includes('</script')) {
 }
 
 await mkdir(join(ROOT, 'dist'), { recursive: true });
-const out = join(ROOT, 'dist', 'novel-platform.html');
+const out = join(ROOT, 'dist', 'writeline.html');
 await writeFile(out, html, 'utf8');
 
 const { size } = await stat(out);
-console.log(`built dist/novel-platform.html`);
+console.log(`built dist/writeline.html`);
 console.log(`  ${sorted.length} modules inlined, ${(size / 1024).toFixed(0)} KB, no dependencies`);
 console.log(`  order: ${sorted.map((k) => k.split('/').pop()).join(' -> ')}`);

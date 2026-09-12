@@ -195,6 +195,6 @@ await test('a 24-hour clock in the timeline decides the heading', async () => {
   assert.match(proseToFountain(bid), /INT\. CONTROL ROOM - NIGHT/);
 });
 
-console.log('\nNovel Development Platform — screenplay tests\n');
+console.log('\nWriteline — screenplay tests\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

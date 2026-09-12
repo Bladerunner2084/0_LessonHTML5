@@ -209,6 +209,6 @@ test('every metric declares a tolerance, or drift could not be judged', () => {
   }
 });
 
-console.log('\nNovel Development Platform — style engine tests\n');
+console.log('\nWriteline — style engine tests\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

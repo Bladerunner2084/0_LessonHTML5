@@ -226,6 +226,6 @@ await test('a fact marked misunderstood shows as a false belief', async () => {
   assert.equal(readerStateAt(bid, 25).wrong.length, 0);
 });
 
-console.log('\nNovel Development Platform — reader model tests\n');
+console.log('\nWriteline — reader model tests\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

@@ -32,7 +32,7 @@ export function renderTree() {
 
   return h('nav', { class: 'tree', 'aria-label': 'Projects' },
     h('div', { class: 'tree-head' },
-      h('h1', {}, 'Novel Development', h('br'), 'Platform'),
+      h('h1', {}, 'Writeline'),
       h('button', { class: 'btn btn-primary btn-block', onclick: newProject },
         '+ New project')),
 

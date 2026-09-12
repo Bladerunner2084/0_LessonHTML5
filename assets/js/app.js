@@ -55,8 +55,8 @@ function render() {
   renderWorkspace();
 
   document.title = S.get(S.ui.projectId)
-    ? `${S.get(S.ui.projectId).title} — Novel Development Platform`
-    : 'Novel Development Platform';
+    ? `${S.get(S.ui.projectId).title} — Writeline`
+    : 'Writeline';
 }
 
 /* Painted on its own so the search box can update results on every keystroke
@@ -130,7 +130,7 @@ function renderHeader() {
  * database is a convenience, and browsers throw those away without asking. */
 async function backup() {
   const payload = await exportAll();
-  const name = S.get(S.ui.projectId)?.title ?? 'novel-platform';
+  const name = S.get(S.ui.projectId)?.title ?? 'writeline';
   download(`${slug(name)}-backup.json`, JSON.stringify(payload, null, 2), 'application/json');
 }
 

@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const FILE = join(ROOT, 'dist', 'novel-platform.html');
+const FILE = join(ROOT, 'dist', 'writeline.html');
 
 async function loadPlaywright() {
   const require = createRequire(import.meta.url);
@@ -103,6 +103,6 @@ try {
   await browser.close();
 }
 
-console.log('\nNovel Development Platform — distribution tests (file://, offline)\n');
+console.log('\nWriteline — distribution tests (file://, offline)\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

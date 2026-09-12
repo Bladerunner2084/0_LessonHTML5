@@ -216,6 +216,6 @@ await test('search is case-insensitive and ignores punctuation around terms', ()
   assert.ok(search('  cradle,  ').length > 0);
 });
 
-console.log('\nNovel Development Platform — import and search tests\n');
+console.log('\nWriteline — import and search tests\n');
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);

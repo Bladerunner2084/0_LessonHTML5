@@ -33,6 +33,7 @@ export async function load() {
 
 /* --- UI position survives a reload; the records are the payload, but losing
  * your place in a 40-chapter book every refresh is its own kind of data loss. */
+/* Deliberately not renamed with the product — see the note in store.js. */
 const UI_KEY = 'novel-platform-ui';
 
 function restoreUi() {

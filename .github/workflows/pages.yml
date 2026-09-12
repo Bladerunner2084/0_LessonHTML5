@@ -50,8 +50,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: novel-platform-single-file
-          path: dist/novel-platform.html
+          name: writeline-single-file
+          path: dist/writeline.html
 
       - name: Install Chromium for the browser tests
         run: |

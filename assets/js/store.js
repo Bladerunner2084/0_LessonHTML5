@@ -11,6 +11,12 @@
  * plain JSON. The database is a cache; the JSON is the archive.
  */
 
+/* The product is called Writeline. These identifiers are NOT renamed with it.
+ * The database name is the address of every word a writer has already put into
+ * this application; changing it would open an empty book and call that a
+ * rebrand. A rename is a marketing change and must never be a migration event.
+ * The same goes for the export format tag below — older backups have to keep
+ * importing. */
 const DB_NAME = 'novel-platform';
 const DB_VERSION = 1;
 const STORE = 'records';
@@ -145,7 +151,7 @@ export async function exportAll() {
  * mode 'merge' keeps existing records — used by "import a character bible". */
 export async function importAll(payload, mode = 'replace') {
   if (!payload || !Array.isArray(payload.records)) {
-    throw new Error('Not a novel-platform export: missing records array.');
+    throw new Error('That is not a Writeline backup: no records array found.');
   }
   if (mode === 'replace') {
     const existing = await all();

@@ -1,8 +1,8 @@
 {
-  "name": "novel-development-platform",
+  "name": "writeline",
   "version": "0.1.0",
   "private": true,
-  "description": "A graph-backed workspace for planning, drafting and continuity-checking novels and series.",
+  "description": "Writeline — your reader's line through the book. Continuity, reader-memory and style tooling for long fiction.",
   "type": "module",
   "scripts": {
     "start": "python3 -m http.server 8000",

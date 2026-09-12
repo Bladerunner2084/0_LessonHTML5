@@ -1,10 +1,12 @@
-# Novel Development Platform
+# Writeline
+
+**Your reader’s line through the book.**
 
 A client-side workspace for planning, drafting and **continuity-checking** novels
 and series. No build step, no server, no account. Open it, and it runs.
 
 ```
-NOVEL DEVELOPMENT PLATFORM
+WRITELINE
 │
 ├── Novel Project: ECHO 2084
 │   ├── Dashboard          what the book is, computed — and what to do next
@@ -37,7 +39,7 @@ NOVEL DEVELOPMENT PLATFORM
 ## Run it
 
 ```bash
-node build.mjs                  # -> dist/novel-platform.html, one self-contained file
+node build.mjs                  # -> dist/writeline.html, one self-contained file
 ```
 
 Open that file directly. No server, no install, no account, no internet — it is

@@ -345,6 +345,6 @@ await test('word count handles apostrophes and hyphens as one word each', () => 
   assert.equal(wordCount('   '), 0);
 });
 
-console.log(`\nNovel Development Platform — smoke tests\n`);
+console.log(`\nWriteline — smoke tests\n`);
 console.log(results.join('\n'));
 console.log(`\n${passed}/${results.length} passed\n`);
