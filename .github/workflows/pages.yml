@@ -36,6 +36,17 @@ jobs:
       - name: Screenplay converter tests
         run: node tests/script.mjs
 
+      - name: Build the single-file distributable
+        run: node build.mjs
+
+      - name: Distribution tests (file://, offline)
+        run: node tests/dist.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: novel-platform-single-file
+          path: dist/novel-platform.html
+
       - name: Install Chromium for the browser tests
         run: |
           npm install --no-save playwright@^1.56.0
@@ -54,8 +65,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Only the landing page is published. The application itself is the thing
+      # being sold, so it is deliberately NOT deployed to a public URL.
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: landing
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Novel Development Platform — continuity tooling for long fiction</title>
+<meta name="description" content="A writing tool that models the reader, not just the book. Finds the facts your reader has forgotten, the questions they are carrying, and the contradictions in your manuscript. One file. No account. Works offline.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>✍</text></svg>">
+<style>
+  :root{
+    color-scheme:dark light;
+    --bg:#0d1013;--raised:#141a1f;--line:#232c34;--soft:#1a2128;
+    --text:#dfe6ec;--dim:#8b99a6;--faint:#5e6b77;--accent:#4fd1a5;--bad:#ff6b6b;--warn:#f5b955;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f7f8f9;--raised:#fff;--line:#d6dadd;--soft:#eceef0;
+      --text:#1a1f24;--dim:#5b6670;--faint:#8a949d;--accent:#0f7a5c}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--sans);
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:56rem;margin:0 auto;padding:0 1.25rem}
+  a{color:inherit}
+
+  header{padding-block:4.5rem 3rem;border-bottom:1px solid var(--line)}
+  .kicker{font:11px/1.6 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.12;margin:0 0 1.1rem;letter-spacing:-.02em}
+  .lede{font-size:1.15rem;color:var(--dim);max-width:44ch;margin:0 0 2rem}
+  .cta{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-block;background:var(--accent);color:#06120e;border:0;border-radius:6px;
+    padding:.75rem 1.4rem;font:600 15px/1 var(--sans);text-decoration:none}
+  .btn.ghost{background:none;color:var(--text);border:1px solid var(--line)}
+  .price{font:13px/1.5 var(--mono);color:var(--dim)}
+
+  section{padding-block:3.25rem;border-bottom:1px solid var(--line)}
+  h2{font-size:1.35rem;margin:0 0 .5rem;letter-spacing:-.01em}
+  h3{font-size:1rem;margin:0 0 .3rem}
+  p{margin:0 0 1rem;max-width:62ch}
+  .dim{color:var(--dim)}
+
+  .quote{border-left:2px solid var(--warn);padding:.4rem 0 .4rem 1rem;margin:1.5rem 0;
+    color:var(--warn);font:italic 15px/1.6 var(--sans);max-width:60ch}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:1.1rem;margin-top:1.6rem}
+  .card{background:var(--raised);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem}
+  .card p{font-size:14.5px;color:var(--dim);margin:0}
+  .card .tag{font:10px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:.35rem}
+
+  .rows{list-style:none;margin:1.2rem 0 0;padding:0;display:grid;gap:.55rem}
+  .rows li{display:flex;gap:.7rem;align-items:flex-start;font-size:15px}
+  .rows .mark{color:var(--accent);flex:none;font:13px/1.7 var(--mono)}
+  .rows .no{color:var(--faint)}
+
+  .honest{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.3rem}
+  .honest h3{color:var(--warn)}
+
+  footer{padding-block:2.5rem 4rem;color:var(--faint);font-size:13.5px}
+  footer p{max-width:60ch}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="kicker">Novel Development Platform</p>
+    <h1>Your reader forgot what you told them in chapter four.</h1>
+    <p class="lede">
+      Every writing tool organises what <em>you</em> know. This one works out what your
+      <em>reader</em> still remembers — and tells you when a scene is leaning on something
+      they lost two hundred pages ago.
+    </p>
+    <div class="cta">
+      <!-- Replace with your Gumroad / Payhip / Lemon Squeezy checkout link. -->
+      <a class="btn" href="#buy">Buy — one file, yours forever</a>
+      <a class="btn ghost" href="#what">See what it does</a>
+    </div>
+  </div>
+</header>
+
+<section id="what">
+  <div class="wrap">
+    <h2>The problem nothing else catches</h2>
+    <p>
+      You establish something important early. Two hundred pages later you write a scene
+      that only works if the reader is still holding it. To you it is obvious — you wrote it,
+      you have reread it forty times. To them it was a single sentence, a long time ago.
+    </p>
+    <p>Your editor comes back with:</p>
+    <div class="quote">“I didn’t follow that scene.”</div>
+    <p>And you think: <em>but I explained it in chapter four.</em> You are both right.</p>
+    <p class="dim">
+      Every other continuity tool treats reader knowledge as permanent — revealed once,
+      known forever. Readers do not work that way. This one models forgetting.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What it tells you</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Reader simulator</span>
+        <h3>What they’re holding, scene by scene</h3>
+        <p>Drag through the book and see what the reader knows, what they are still waiting
+          on, what they believe that is wrong, and what has faded.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Tension curve</span>
+        <h3>Where the book sags</h3>
+        <p>The weight of unanswered questions, computed per scene. Writers feel the sag.
+          This points at the scene.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Continuity engine</span>
+        <h3>Twenty-one checks, always current</h3>
+        <p>Characters on the page after they die. Reveals the reader has not reached yet.
+          Setups you never paid off. Chronology running backwards.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Screenplay</span>
+        <h3>Convert without risking the novel</h3>
+        <p>Fountain format, opens in Final Draft. Your prose is never modified, and every
+          judgement the converter refuses to make is left as a note you can find.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Draft vault</span>
+        <h3>Nothing is ever destroyed</h3>
+        <p>Snapshot the whole book before a rewrite pass. Restoring one snapshots the
+          present first, so no click loses work you cannot get back.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Deadlines</span>
+        <h3>Arithmetic, not encouragement</h3>
+        <p>Measures your real pace from your own history. If a plan needs 4,000 words a day,
+          it says so instead of cheering.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>One file</h2>
+    <p>
+      The whole application is a single HTML file. Download it, double-click it, write.
+    </p>
+    <ul class="rows">
+      <li><span class="mark">✓</span><span>No account. No sign-up. No subscription.</span></li>
+      <li><span class="mark">✓</span><span>No internet needed — it never contacts a server, including ours.</span></li>
+      <li><span class="mark">✓</span><span>Your manuscript stays on your machine. Nobody else can read it, us included.</span></li>
+      <li><span class="mark">✓</span><span>Exports to Markdown, print-ready HTML, Fountain and Final Draft.</span></li>
+      <li><span class="mark">✓</span><span>Back up everything to one JSON file you own.</span></li>
+      <li><span class="mark">✓</span><span>Buy once. It cannot stop working, expire, or be discontinued.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="honest">
+      <h3>What it does not do</h3>
+      <p class="dim" style="margin-bottom:.6rem">
+        Stated plainly, because finding out after paying is how people ask for refunds.
+      </p>
+      <ul class="rows">
+        <li><span class="mark no">✗</span><span><strong>It does not write for you.</strong> No AI drafting, no prose generation.
+          It is a diagnostic instrument, not a ghostwriter.</span></li>
+        <li><span class="mark no">✗</span><span><strong>No sync.</strong> One browser on one machine. Moving between devices
+          means exporting the backup file and importing it.</span></li>
+        <li><span class="mark no">✗</span><span><strong>No full-text search yet.</strong> On a finished manuscript you will want it.</span></li>
+        <li><span class="mark no">✗</span><span><strong>No collaboration.</strong> This is a single-author tool.</span></li>
+        <li><span class="mark no">✗</span><span><strong>Browsers can clear local data.</strong> Back up to JSON. The app makes
+          it one click; it cannot make you do it.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="buy">
+  <div class="wrap">
+    <h2>Buy it</h2>
+    <p>
+      One payment. One file. Free updates to the file you bought, for as long as it is
+      being worked on.
+    </p>
+    <div class="cta">
+      <!-- Replace href with your checkout link, and set the price below. -->
+      <a class="btn" href="#">Buy now</a>
+      <span class="price">— set your price here —</span>
+    </div>
+    <p class="dim" style="margin-top:1.4rem">
+      Not sure? The honest list above is the whole pitch. If the reader-memory problem is
+      not one you have, this will not help you, and you should keep your money.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Built for long fiction — novels, series, and anything with enough pages that a reader
+      can forget something between them.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

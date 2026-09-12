@@ -36,19 +36,29 @@ NOVEL DEVELOPMENT PLATFORM
 ## Run it
 
 ```bash
+node build.mjs                  # -> dist/novel-platform.html, one self-contained file
+```
+
+Open that file directly. No server, no install, no account, no internet — it is
+the whole application in a single file, which is also what makes it sellable as
+a download. See [docs/selling.md](docs/selling.md).
+
+To work on the source instead:
+
+```bash
 python3 -m http.server 8000     # or: npx serve .
 # then open http://localhost:8000
 ```
 
-It needs a static server, not `file://` — ES modules are blocked over the file
-protocol by browser CORS rules. Any static host works: GitHub Pages, Netlify,
-an S3 bucket, a Raspberry Pi on your desk.
+The source needs a static server, since browsers block ES modules over `file://`.
+The **built file has no such limitation** — that is the point of building it.
 
 ```bash
 node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace tests
 node tests/reader.mjs           # 17 tests for the Reader Model
 node tests/script.mjs           # 21 tests for the screenplay converter
 node tests/browser.mjs          # 60 tests driving the real app in Chromium
+node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
 
 The browser suite serves the repo on an ephemeral port and needs Playwright
@@ -334,6 +344,10 @@ tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
 tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
 tests/script.mjs            21 screenplay conversion and export tests
 tests/browser.mjs           60 end-to-end tests against a real Chromium
+tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
+build.mjs                   inlines the module graph into one distributable file
+landing/index.html          the sales page (the only thing GitHub Pages publishes)
+docs/selling.md             how to actually put it in front of buyers
 .github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
 
