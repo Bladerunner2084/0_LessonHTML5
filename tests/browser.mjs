@@ -210,8 +210,10 @@ try {
   /* Publication: three routes, and a readiness gate that cannot be ticked. */
   await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('publish')).click();
   await page.waitForTimeout(250);
-  check('publication offers all three routes',
-    await page.locator('.pathway').count() === 3);
+  check('publication offers all four routes, direct-to-reader included',
+    await page.locator('.pathway').count() === 4);
+  check('the direct route is present and describes the merchant burden',
+    /merchant/i.test(await page.locator('.pathway', { hasText: 'Direct to reader' }).innerText()));
   check('no checklist appears until a route is chosen',
     await page.locator('.pub-list').count() === 0);
 
@@ -221,6 +223,16 @@ try {
     await page.locator('.pub-list li').count() >= 12);
   check('the computed readiness items cannot be ticked by hand',
     await page.locator('.pub-list input[disabled]').count() === 2);
+
+  /* The direct route carries the obligations authors discover after the first
+   * sale, which is the worst time to discover them. */
+  await page.locator('.pathway', { hasText: 'Direct to reader' }).click();
+  await page.waitForTimeout(300);
+  const directText = await page.locator('.pub-list').innerText();
+  check('the direct route names the tax and merchant-of-record obligations',
+    /merchant of record/i.test(directText) && /VAT/i.test(directText), directText.slice(0, 120));
+  check('the direct route names the unit economics',
+    /unit economics/i.test(directText));
 
   await page.locator('.pathway', { hasText: 'Traditional' }).click();
   await page.waitForTimeout(300);

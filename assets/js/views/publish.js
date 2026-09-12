@@ -53,6 +53,25 @@ const CHECKLISTS = {
     ['arc', 'ARC readers lined up for launch-week reviews'],
     ['launch', 'Launch plan — the book does not sell itself'],
   ],
+  /* Ordered by what actually blocks a launch. The production items come first
+   * because a wrong spine width is discovered at the proof stage and costs a
+   * week; the money and tax items come next because they are the ones authors
+   * discover after the first sale, which is the worst possible time. */
+  direct: [
+    ...COMMON,
+    ['interior', 'Print-ready interior PDF at the printer’s spec — bleed, trim, gutter'],
+    ['spine', 'Cover wrap built from the printer’s spine calculator for the FINAL page count'],
+    ['proof', 'Physical proof copy ordered, held, and approved'],
+    ['pod', 'Print-on-demand partner chosen and account linked'],
+    ['store', 'Storefront live on your own domain'],
+    ['payments', 'Payment processor connected to your bank account'],
+    ['mor', 'Merchant of record decided — who is legally making the sale'],
+    ['tax', 'Sales tax / VAT registration and collection, per territory you ship to'],
+    ['shipping', 'Shipping rates, delivery estimates and a returns policy published'],
+    ['economics', 'Unit economics proved: print + shipping + fees against your price'],
+    ['support', 'A support channel — a physical product generates physical problems'],
+    ['isbn', 'ISBN acquired (one per format, in your own name if you want to keep it)'],
+  ],
   assisted: [
     ...COMMON,
     ['editorial', 'Human editorial pass — the tooling does not replace this'],
@@ -165,7 +184,9 @@ function checklist(bookId, pathway, checks, ready) {
 
 function tracker(bookId, pathway) {
   const rows = S.list('submission').filter((r) => r.bookId === bookId);
-  const label = pathway === 'traditional' ? 'Agents and publishers' : 'Platforms and listings';
+  const label = pathway === 'traditional'
+    ? 'Agents and publishers'
+    : pathway === 'direct' ? 'Printers, storefront and payment rails' : 'Platforms and listings';
 
   return h('section', {},
     h('h3', {}, label, h('span', { class: 'muted' }, ` · ${rows.length}`)),
@@ -173,7 +194,10 @@ function tracker(bookId, pathway) {
       pathway === 'traditional'
         ? 'Log every query. Six months on, "did I already send to them?" is a question you '
           + 'will not be able to answer from memory.'
-        : 'Log every listing. Platforms, prices and dates diverge fast across three stores.'),
+        : pathway === 'direct'
+          ? 'Log each supplier and rail: printer, storefront, processor, tax registration. '
+            + 'When an order fails you need to know which of the four broke.'
+          : 'Log every listing. Platforms, prices and dates diverge fast across three stores.'),
     h('div', { class: 'stack' }, rows.map((row) => h('article', { class: `card sub-row ${row.status}` },
       h('div', { class: 'card-head' },
         h('input', {

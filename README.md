@@ -102,11 +102,21 @@ lying, and the author finds out too late to act on it.
 
 ### Publication (§35)
 
-Three routes, each with the obligations it actually carries: **Traditional**
+Four routes, each with the obligations it actually carries: **Traditional**
 (query, synopsis, comps, agent research, submission log), **Self-publishing**
-(cover, interior, ISBN, copyright, distribution, pricing, ARCs, launch), and
+(cover, interior, ISBN, copyright, distribution, pricing, ARCs, launch),
 **AI-assisted** (human editorial pass, disclosure, imagery rights, metadata,
-quality floor). Shared obligations carry across all three.
+quality floor), and **Direct to reader** — print-on-demand fulfilment from the
+author's own storefront, money to their own bank. Shared obligations carry
+across all four.
+
+The direct route is the highest margin per copy and the only one where the
+author becomes the **retailer**, so its checklist leads with the things authors
+discover *after* the first sale: merchant of record, sales tax and VAT per
+territory, returns policy, chargebacks, and unit economics proved against the
+actual print and shipping cost. The production items sit above them because a
+spine width computed from a stale page count is found at the proof stage and
+costs a week.
 
 Two checklist items — *manuscript complete* and *continuity clean* — cannot be
 ticked by hand. They are computed, because ticking them yourself while the
@@ -310,6 +320,27 @@ lies:
 - **No AI layer.** The Writers' Room (§31), Red Team (§32), Realism Audit (§16),
   prose-level Character Lock (§4) and the Style Engine all wait on one decision
   that has not been made — see below.
+
+## Design posture
+
+The reference points are **Final Draft, Adobe, Figma** — instruments. Not
+Campfire, not Notion-with-dragons. That is a product decision, and it has
+consequences worth stating so they do not get designed away later:
+
+- **No gamification.** No streaks, no badges, no confetti, no encouragement. The
+  deadline panel will tell you a plan is impossible; a tool that cheers instead
+  is not on your side.
+- **Density over whitespace.** A professional tool shows the work, not the brand.
+- **Every number derived.** Nothing on a dashboard that a person has to remember
+  to update, because the first stale figure poisons all the others.
+- **Keyboard first.** `Ctrl`/`Cmd` + `1`–`0` moves between sections today; that
+  is the direction, not the destination.
+- **The app never writes for you unasked.** It reports, computes, and gets out of
+  the way.
+
+A serious writer's objection to most of this category is that it is a hobby toy
+with a subscription. The way not to be that is to be *diagnostic* — to tell the
+author something true they could not otherwise see.
 
 ## What "SaaS" would still require
 

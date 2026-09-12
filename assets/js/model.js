@@ -37,6 +37,15 @@ export const PATHWAYS = {
     blurb: 'Tooling handles production and distribution. Fast, cheap, and the '
       + 'quality floor is entirely your own editorial discipline.',
   },
+  /* Print-on-demand sold from the author's own storefront. The highest margin
+   * per copy by a wide margin, and the only route where the author is also the
+   * retailer — which is a legal position, not just a technical one. */
+  direct: {
+    label: 'Direct to reader',
+    blurb: 'Your storefront, print-on-demand fulfilment, money to your own bank. '
+      + 'Best margin per copy, and you become the merchant — tax, returns and '
+      + 'support included.',
+  },
 };
 
 /* PRD §34 — canon status, and §2's author-confirmed / AI-inferred / unresolved
