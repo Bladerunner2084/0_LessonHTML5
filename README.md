@@ -38,8 +38,13 @@ protocol by browser CORS rules. Any static host works: GitHub Pages, Netlify,
 an S3 bucket, a Raspberry Pi on your desk.
 
 ```bash
-node tests/smoke.mjs            # 16 integration tests, no browser required
+node tests/smoke.mjs            # 16 graph + continuity tests, no browser needed
+node tests/browser.mjs          # 19 tests driving the real app in Chromium
 ```
+
+The browser suite serves the repo on an ephemeral port and needs Playwright
+(`npm install`); it skips itself cleanly when Playwright is absent, so the first
+command always works on a bare checkout.
 
 Click **Sample** in the header to load ECHO 2084 plus the two empty projects.
 The sample ships with **two deliberate continuity errors** — open **Continuity**
@@ -146,11 +151,14 @@ assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
 assets/js/seed.js           the ECHO 2084 sample, faults included
 assets/js/views/*.js        one module per screen
-tests/smoke.mjs             integration tests, Node only
+tests/smoke.mjs             graph and continuity tests, Node only
+tests/browser.mjs           end-to-end tests against a real Chromium
+.github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
 
-No dependencies. No framework. No transpiler. A novel outlives a toolchain, and
-this one should still open in a browser in 2035.
+No runtime dependencies. No framework. No transpiler. The only `devDependency`
+is Playwright, and it never reaches the published site. A novel outlives a
+toolchain, and this one should still open in a browser in 2035.
 
 **Keyboard:** `Ctrl`/`Cmd` + `1`–`0` jumps between the ten sections.
 
@@ -167,3 +175,22 @@ lies:
   timelines are not modelled.
 - **One device.** No sync. The JSON backup is the transport between machines.
 - **Drag-and-drop reordering** is not implemented; use the `↑`/`↓` buttons.
+- **No AI orchestration and no Style Engine yet.** Both are named components of
+  the wider system and both have specifications held outside this repository.
+  They are absent rather than guessed at — see below.
+
+## Not built, deliberately
+
+The wider system names two components this repository does not implement:
+**AI orchestration** and a **Style Engine**. Their specifications (PRD, writing
+methodology, style specs, controlled-rewrite passes) live outside this repo.
+
+They are not stubbed, mocked or approximated here. A Style Engine built from a
+guess about someone's prose standards is worse than no Style Engine: it produces
+confident output against the wrong rules, and confident wrong output in a
+manuscript is expensive to detect and expensive to undo. When the specifications
+land in the repository, they get built against the specifications.
+
+What does exist is the seam they plug into: every record is addressable, the
+whole graph serialises to JSON, and the Audit Engine already establishes the
+pattern — read the graph, return findings, store nothing.

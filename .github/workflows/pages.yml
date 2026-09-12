@@ -1,0 +1,55 @@
+# The application ships with zero runtime dependencies, so there is nothing to
+# build: the deploy step uploads the repository as-is. Playwright is installed
+# only to drive the browser tests, and never reaches the published site.
+name: Test and deploy
+
+on:
+  push:
+    branches: [master, 'claude/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Graph and continuity tests
+        run: node tests/smoke.mjs
+
+      - name: Install Chromium for the browser tests
+        run: |
+          npm install --no-save playwright@^1.56.0
+          npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: node tests/browser.mjs
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
