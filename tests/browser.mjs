@@ -56,10 +56,11 @@ if (!pw) {
   process.exit(0);
 }
 
-const SECTIONS = ['draft0', 'story', 'character', 'world', 'timeline',
-  'revelations', 'chapters', 'scenes', 'manuscript', 'audit'];
-const HEADINGS = ['Draft 0', 'Story Bible', 'Character Bible', 'World Bible', 'Timeline',
-  'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript', 'Continuity'];
+const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
+  'revelations', 'chapters', 'scenes', 'manuscript', 'audit', 'decisions', 'inbox'];
+const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
+  'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
+  'Continuity', 'Decision Log', 'Questions & Ideas'];
 
 const results = [];
 let passed = 0;
@@ -88,19 +89,33 @@ try {
   await page.waitForTimeout(600);
 
   const projects = await page.locator('.node.project .node-label .name').allTextContents();
-  check('the sample seeds all three projects',
-    JSON.stringify(projects) === JSON.stringify(['ECHO 2084', 'Future Novel', 'Future Series']),
+  check('the sample seeds the author project, the demo fixture and the two futures',
+    JSON.stringify(projects) === JSON.stringify(
+      ['ECHO 2084', 'ECHO 2084 — Demo Fixture', 'Future Novel', 'Future Series']),
     `got ${JSON.stringify(projects)}`);
 
+  /* The sample opens on the demo fixture's dashboard (PRD §30/§41). */
+  check('the dashboard names exactly one next action',
+    await page.locator('.next-action').count() === 1);
+  check('the Controlled Rewrite shows all seventeen stages',
+    await page.locator('.stage-list .stage').count() === 17);
+  const pct = await page.locator('.overall-pct').textContent();
+  check('overall progress is computed, not zero and not complete',
+    /^[1-9]\d?%$/.test(pct?.trim() ?? ''), `got ${JSON.stringify(pct)}`);
+
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('audit')).click();
+  await page.waitForTimeout(250);
   const tallies = (await page.locator('.score .tally').allTextContents()).join(' ');
   check('the continuity engine reports the two planted contradictions',
     tallies.startsWith('2 contradictions'), `got "${tallies}"`);
+  check('canon discipline is enforced against drafted prose',
+    await page.locator('.audit-group.warn', { hasText: 'unsettled dependency' }).count() > 0);
 
   for (const [i, id] of SECTIONS.entries()) {
     await page.locator('.tree-sections .section').nth(i).click();
     await page.waitForTimeout(180);
     const heading = await page.locator('.view-head h2').first().textContent().catch(() => '');
-    check(`section "${id}" paints`, heading?.trim() === HEADINGS[i],
+    check(`section "${id}" paints`, heading?.trim().startsWith(HEADINGS[i]),
       `expected ${HEADINGS[i]}, got ${JSON.stringify(heading)}`);
   }
 
@@ -130,16 +145,46 @@ try {
   /* Draft 0 extraction: the bridge from unstructured text into the graph. */
   await page.locator('.node.book .node-label', { hasText: 'Book 1' }).click();
   await page.waitForTimeout(250);
-  await page.locator('.tree-sections .section').nth(0).click();
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('draft0')).click();
   await page.waitForTimeout(250);
   await page.locator('.draft0-area').fill('Wintermark is the city that eats its own archives.');
   await page.locator('.draft0-area').evaluate((el) => { el.focus(); el.setSelectionRange(0, 10); });
   await page.getByRole('button', { name: 'Character', exact: true }).click();
   await page.waitForTimeout(400);
-  await page.locator('.tree-sections .section').nth(2).click();
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('character')).click();
   await page.waitForTimeout(250);
   check('selecting text in Draft 0 promotes it into the Character Bible',
     (await page.locator('.list .list-item .name').allTextContents()).includes('Wintermark'));
+
+  /* PRD §26 — the Draft Vault must preserve, and a restore must be reversible. */
+  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('vault')).click();
+  await page.waitForTimeout(250);
+  check('the demo fixture ships with Draft 0 preserved',
+    await page.locator('.version-card').count() >= 1);
+
+  /* Two prompts fire in sequence (label, then reason). Playwright dispatches
+   * every registered listener to the FIRST dialog, so one handler drains a
+   * queue rather than two handlers racing for the same dialog. */
+  const answers = ['Browser test point', 'taken by the browser test'];
+  const onDialog = async (d) => {
+    const next = answers.shift();
+    if (next === undefined) { await d.dismiss(); return; }
+    await d.accept(next);
+  };
+  page.on('dialog', onDialog);
+  await page.getByRole('button', { name: '+ Preserve this state' }).click();
+  await page.waitForTimeout(600);
+  check('preserving the current state adds a version',
+    await page.locator('.version-card').count() >= 2);
+
+  page.off('dialog', onDialog);
+
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('decisions')).click();
+  await page.waitForTimeout(250);
+  check('the decision log carries a locked decision with its reason',
+    await page.locator('.card.decision.locked').count() >= 1);
 
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {

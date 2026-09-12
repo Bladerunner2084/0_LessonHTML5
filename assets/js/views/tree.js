@@ -7,7 +7,9 @@ import * as S from '../state.js';
 import { audit, summarise } from '../lint.js';
 
 export const SECTIONS = [
+  { id: 'dashboard',   label: 'Dashboard',      hint: 'Where the book actually is, computed.' },
   { id: 'draft0',      label: 'Draft 0',        hint: 'Unstructured first pass. Mine it later.' },
+  { id: 'vault',       label: 'Draft Vault',    hint: 'Every preserved version. Nothing is destroyed.' },
   { id: 'story',       label: 'Story Bible',    hint: 'Premise, themes, concepts, loose pages.' },
   { id: 'character',   label: 'Character Bible', hint: 'People: want, wound, lie, voice.' },
   { id: 'world',       label: 'World Bible',    hint: 'Places, factions, objects.' },
@@ -17,6 +19,8 @@ export const SECTIONS = [
   { id: 'scenes',      label: 'Scene Map',      hint: 'The atomic unit. Prose lives here.' },
   { id: 'manuscript',  label: 'Manuscript',     hint: 'Compiled output. Read-only by design.' },
   { id: 'audit',       label: 'Continuity',     hint: 'Where the graph catches you lying.' },
+  { id: 'decisions',   label: 'Decision Log',   hint: 'Locked author decisions. Authoritative.' },
+  { id: 'inbox',       label: 'Questions & Ideas', hint: 'Unanswered questions and raw ideas.' },
 ];
 
 export function renderTree() {

@@ -14,11 +14,16 @@ import { renderTimeline, renderRevelations } from './views/timeline.js';
 import { renderChapters, renderScenes } from './views/structure.js';
 import { renderManuscript } from './views/manuscript.js';
 import { renderAudit } from './views/audit.js';
+import { renderDashboard } from './views/dashboard.js';
+import { renderVault } from './views/vault.js';
+import { renderDecisions, renderInbox } from './views/authority.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
 
 const VIEWS = {
+  dashboard: renderDashboard,
   draft0: renderDraft0,
+  vault: renderVault,
   story: (bookId) => renderBible(bookId, 'story'),
   character: (bookId) => renderBible(bookId, 'character'),
   world: (bookId) => renderBible(bookId, 'world'),
@@ -28,6 +33,8 @@ const VIEWS = {
   scenes: renderScenes,
   manuscript: renderManuscript,
   audit: renderAudit,
+  decisions: renderDecisions,
+  inbox: renderInbox,
 };
 
 const el = {};
@@ -37,7 +44,7 @@ function render() {
   clear(el.header).append(renderHeader());
 
   const bookId = S.ui.bookId;
-  const renderView = VIEWS[S.ui.view] ?? VIEWS.draft0;
+  const renderView = VIEWS[S.ui.view] ?? VIEWS.dashboard;
 
   clear(el.workspace).append(
     bookId
@@ -112,9 +119,9 @@ async function restore(event) {
 }
 
 async function loadSample() {
-  const existing = S.list('project').find((p) => p.title === 'ECHO 2084');
+  const existing = S.list('project').find((p) => p.title.startsWith('ECHO 2084'));
   if (existing) {
-    S.setUi({ projectId: existing.id, bookId: S.books(existing.id)[0]?.id, view: 'audit' });
+    S.setUi({ projectId: existing.id, bookId: S.books(existing.id)[0]?.id, view: 'dashboard' });
     return;
   }
   await seedPlatform();

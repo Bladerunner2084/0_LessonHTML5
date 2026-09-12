@@ -47,6 +47,18 @@ export const RULES = {
   'missing-pov': { severity: 'warn', blurb: 'A drafted scene with no POV assigned.' },
   'missing-location': { severity: 'info', blurb: 'A drafted scene with no location.' },
   'empty-drafted': { severity: 'error', blurb: 'Marked drafted but contains no prose.' },
+  'rejected-canon-in-prose': {
+    severity: 'error',
+    blurb: 'Drafted prose depends on something the author has ruled non-canon.',
+  },
+  'scene-purpose-unclear': {
+    severity: 'warn',
+    blurb: 'A scene with no stated reason to exist. PRD §11: every scene needs a job.',
+  },
+  'unsettled-dependency': {
+    severity: 'warn',
+    blurb: 'Finished prose resting on a fact that is still provisional or AI-suggested.',
+  },
   'unplaced-scene': {
     severity: 'info',
     blurb: 'No beat attached, so this scene has no position in story time.',
@@ -209,6 +221,49 @@ export function audit(bookId) {
       out.push(finding('pov-not-present',
         `${S.entityName(scene.pov)} narrates “${scene.title}” but is not in the cast list.`,
         at(scene)));
+    }
+  }
+
+  /* --- 4b. Canon discipline (PRD §34) ---------------------------------
+   * The platform's whole argument is that an AI suggestion must never become
+   * story fact by accident. The moment finished prose leans on an unapproved
+   * record, it has — so that is exactly where to say so. */
+  const canonOf = (id) => (id ? S.get(id)?.canon ?? 'canon' : 'canon');
+
+  for (const scene of scenes) {
+    if (!DRAFTED.has(scene.status)) continue;
+
+    const deps = [
+      ...(scene.presentIds ?? []),
+      ...(scene.usesRevelationIds ?? []),
+      scene.pov,
+      scene.locationId,
+    ].filter(Boolean);
+
+    const unsettled = [];
+    for (const id of new Set(deps)) {
+      const state = canonOf(id);
+      const record = S.get(id);
+      if (!record) continue;
+      const name = record.name ?? record.label ?? 'a record';
+      if (state === 'rejected') {
+        out.push(finding('rejected-canon-in-prose',
+          `“${scene.title}” is ${scene.status} but depends on ${name}, marked non-canon.`,
+          at(scene)));
+      } else if (state !== 'canon') {
+        unsettled.push(`${name} (${state})`);
+      }
+    }
+    if (unsettled.length) {
+      out.push(finding('unsettled-dependency',
+        `“${scene.title}” is ${scene.status} but rests on ${unsettled.join(', ')}.`,
+        at(scene)));
+    }
+
+    /* PRD §10/§11 — "SCENE PURPOSE UNCLEAR". */
+    if (!scene.summary?.trim()) {
+      out.push(finding('scene-purpose-unclear',
+        `“${scene.title}” is ${scene.status} with no stated purpose.`, at(scene)));
     }
   }
 

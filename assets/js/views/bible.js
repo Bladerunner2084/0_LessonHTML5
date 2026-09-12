@@ -6,9 +6,9 @@
  * every scene, beat and revelation this record touches, computed, always right.
  */
 
-import { h, field, debounce, confirmDanger } from '../dom.js';
+import { h, field, debounce, confirmDanger, canonControl } from '../dom.js';
 import * as S from '../state.js';
-import { ENTITY_KINDS } from '../model.js';
+import { ENTITY_KINDS, CHARACTER_FIELDS, CANON, CANON_ORDER } from '../model.js';
 import { bibleToMarkdown, download, slug } from '../compile.js';
 
 export const BIBLE_KINDS = {
@@ -20,7 +20,10 @@ export const BIBLE_KINDS = {
 /* Field presets are prompts, not schema. Every one is deletable and you can add
  * your own — a form that fights the writer gets abandoned by chapter three. */
 const PRESETS = {
-  character: ['Want', 'Need', 'Wound', 'Lie they believe', 'Voice', 'Arc'],
+  /* The craft fields first, then the PRD §4 roster. "Would NEVER do" is last in
+   * the spec and first in usefulness: it is the only field an automated
+   * Character Lock can actually test a scene against. */
+  character: ['Want', 'Need', 'Wound', 'Lie they believe', ...CHARACTER_FIELDS],
   location:  ['Sensory signature', 'Function in plot', 'Who controls it'],
   faction:   ['Goal', 'Method', 'Weakness'],
   item:      ['What it does', 'Cost of using it', 'Who wants it'],
@@ -153,6 +156,8 @@ function entityEditor(entity, bookId, isSeries) {
           if (confirmDanger(`Delete “${entity.name}”?`)) S.remove(entity.id);
         },
       }, 'Delete')),
+
+    canonControl(entity, (canon) => S.patch(entity.id, { canon }), CANON, CANON_ORDER),
 
     field('Also known as', h('input', {
       value: (entity.aliases ?? []).join(', '),

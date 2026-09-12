@@ -5,9 +5,9 @@
  * somebody found out. A novel is mostly the gap between those two.
  */
 
-import { h, field, select, checkList, debounce, confirmDanger } from '../dom.js';
+import { h, field, select, checkList, debounce, confirmDanger, canonControl } from '../dom.js';
 import * as S from '../state.js';
-import { BEAT_KINDS } from '../model.js';
+import { BEAT_KINDS, REVELATION_STATUS, CANON, CANON_ORDER } from '../model.js';
 import { timelineToMarkdown, download } from '../compile.js';
 
 const save = debounce((id, fields) => S.patch(id, fields), 350);
@@ -161,6 +161,8 @@ function revelationEditor(rev, bookId, scenes) {
         onclick: () => { if (confirmDanger(`Delete “${rev.label}”?`)) S.remove(rev.id); },
       }, 'Delete')),
 
+    canonControl(rev, (canon) => S.patch(rev.id, { canon }), CANON, CANON_ORDER),
+
     field('The fact itself', h('textarea', {
       rows: 3, value: rev.fact, placeholder: 'Stated plainly, as the reader will understand it.',
       oninput: (e) => save(rev.id, { fact: e.target.value }),
@@ -175,7 +177,21 @@ function revelationEditor(rev, bookId, scenes) {
       field('Reader learns it in', select(
         scenes.map((s, i) => ({ value: s.id, label: `${i + 1} · ${s.title}` })),
         rev.revealedIn, (v) => S.patch(rev.id, { revealedIn: v }), { placeholder: 'Never' },
-      ), 'This single field is what makes premature-knowledge detection possible.')),
+      ), 'This single field is what makes premature-knowledge detection possible.'),
+      field('Reader state', select(
+        REVELATION_STATUS.map((v) => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })),
+        rev.status, (v) => S.patch(rev.id, { status: v || 'secret' }), { placeholder: 'Secret' },
+      ), '“Hinted” and “misunderstood” carry most of the work in a thriller.')),
+
+    h('div', { class: 'row' },
+      field('Purpose', h('input', {
+        value: rev.purpose, placeholder: 'Why this exists in the story.',
+        oninput: (e) => save(rev.id, { purpose: e.target.value }),
+      })),
+      field('Consequences', h('input', {
+        value: rev.consequences, placeholder: 'What changes once it lands.',
+        oninput: (e) => save(rev.id, { consequences: e.target.value }),
+      }))),
 
     h('h3', {}, 'Planted in'),
     h('p', { class: 'sub' }, 'Scenes carrying setup. A major reveal with nothing planted reads as a cheat.'),

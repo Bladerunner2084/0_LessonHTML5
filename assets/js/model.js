@@ -17,7 +17,22 @@
 
 export const RECORD_TYPES = [
   'project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene', 'note',
+  'decision', 'question', 'idea', 'version',
 ];
+
+/* PRD §34 — canon status, and §2's author-confirmed / AI-inferred / unresolved
+ * distinction, are the same axis, so they are one field rather than two.
+ * It lives on the base record because a system that cannot tell an AI guess
+ * from an author's decision will eventually launder one into the other, and
+ * that is the specific failure this whole platform exists to prevent. */
+export const CANON = {
+  canon:       { label: 'Canon',         mark: '🟢', blurb: 'The author established this.' },
+  provisional: { label: 'Provisional',   mark: '🟡', blurb: 'Working assumption. Not settled.' },
+  suggested:   { label: 'AI suggestion', mark: '🔵', blurb: 'Proposed by AI. Not yet author-approved.' },
+  rejected:    { label: 'Non-canon',     mark: '🔴', blurb: 'Considered and rejected. Kept as a record.' },
+};
+
+export const CANON_ORDER = ['canon', 'provisional', 'suggested', 'rejected'];
 
 export const ENTITY_KINDS = {
   character: { label: 'Character', bible: 'character', icon: '◈' },
@@ -28,6 +43,22 @@ export const ENTITY_KINDS = {
 };
 
 export const SCENE_STATUS = ['blank', 'outlined', 'drafted', 'revised', 'locked'];
+
+/* PRD §5 — a revelation's state in the reader's mind is not binary. "Hinted"
+ * and "misunderstood" are the two that carry most of the work in a thriller. */
+export const REVELATION_STATUS = [
+  'unknown', 'suspected', 'hinted', 'revealed', 'confirmed',
+  'misunderstood', 'false', 'secret', 'classified', 'redacted',
+];
+
+/* PRD §4 — the Character Bible's prescribed fields. Presented as prompts the
+ * author can delete, never as a form that must be completed. */
+export const CHARACTER_FIELDS = [
+  'Age', 'Birthplace', 'Occupation', 'Physical description', 'Personality',
+  'Values', 'Beliefs', 'Fears', 'Desires', 'Internal conflict', 'External conflict',
+  'Strengths', 'Weaknesses', 'Relationships', 'Secrets', 'Character arc',
+  'Voice', 'Speech characteristics', 'Behavioral rules', 'Would NEVER do',
+];
 
 /* Beats that change whether an entity can legally appear in a later scene.
  * The continuity engine reads these; nothing else in the app cares. */
@@ -48,7 +79,16 @@ export function uid(prefix = 'r') {
 const now = () => new Date().toISOString();
 
 function base(type, fields) {
-  return { id: uid(type.slice(0, 3)), type, createdAt: now(), updatedAt: now(), ...fields };
+  return {
+    id: uid(type.slice(0, 3)),
+    type,
+    /* Anything a human creates in the UI is canon by default. Only the AI layer
+     * may mint a record as 'suggested', and only the author may promote it. */
+    canon: 'canon',
+    createdAt: now(),
+    updatedAt: now(),
+    ...fields,
+  };
 }
 
 export const make = {
@@ -98,6 +138,9 @@ export const make = {
     label: 'Untitled revelation',
     fact: '',
     weight: 'minor',        // 'minor' | 'major' | 'twist'
+    status: 'secret',       // see REVELATION_STATUS
+    purpose: '',            // why this exists in the story
+    consequences: '',       // what changes once it lands
     knownBy: [],            // [{ entityId, sinceBeatId }]
     plantedIn: [],          // sceneIds carrying setup
     revealedIn: null,       // sceneId where the READER learns it
@@ -126,6 +169,53 @@ export const make = {
     usesRevelationIds: [],  // revelations this scene leans on as already-known
     isFlashback: false,
     prose: '',
+    ...f,
+  }),
+
+  /* PRD §27 — a locked decision is a constraint the AI layer must respect.
+   * Storing the reason matters more than storing the decision: six months on,
+   * the reason is the only thing that lets you judge whether to unlock it. */
+  decision: (f = {}) => base('decision', {
+    projectId: null,
+    bookId: null,
+    label: 'Untitled decision',
+    rationale: '',
+    status: 'locked',       // 'locked' | 'open' | 'unlocked'
+    relatedIds: [],
+    ...f,
+  }),
+
+  /* PRD §28 — questions the author has not answered, kept where they cannot
+   * evaporate into a conversation. */
+  question: (f = {}) => base('question', {
+    projectId: null,
+    bookId: null,
+    text: '',
+    answer: '',
+    status: 'open',         // 'open' | 'answered'
+    ...f,
+  }),
+
+  /* PRD §29 — raw, unstructured, deliberately unfiled. Creativity is messy
+   * before it is organised, and forcing the organisation first kills the idea. */
+  idea: (f = {}) => base('idea', {
+    projectId: null,
+    bookId: null,
+    text: '',
+    filedTo: null,          // the record it eventually became, if any
+    ...f,
+  }),
+
+  /* PRD §26 — never overwrite creative work. A version is an immutable JSON
+   * snapshot of the compiled book plus the reason it was taken. */
+  version: (f = {}) => base('version', {
+    projectId: null,
+    bookId: null,
+    label: 'Draft 0',
+    reason: '',
+    aiInvolved: false,
+    words: 0,
+    snapshot: '',           // serialised records, restored wholesale
     ...f,
   }),
 

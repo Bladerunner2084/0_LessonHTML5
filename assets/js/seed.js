@@ -1,25 +1,37 @@
-/* seed.js — the ECHO 2084 sample project.
+/* seed.js — sample data.
  *
- * It ships with two deliberate continuity errors: a scene that leans on a fact
- * the reader has not been given yet, and a character standing in a scene set
- * after she is gone. Load the sample, open Continuity, and the app explains
- * itself in about four seconds. A clean sample would demonstrate nothing.
+ * PRD §47 is explicit: do not populate ECHO 2084 with invented canon unless the
+ * author provides it. So the worked example is a clearly separate DEMO FIXTURE
+ * with a made-up cast, and every record it creates is marked `provisional` or
+ * `suggested` rather than canon. Nothing invented here can be mistaken for the
+ * author's story, by a human or by a future AI pass reading the graph.
+ *
+ * The real ECHO 2084 project is created empty, with placeholder Story Bible
+ * pages and open questions instead of invented answers.
+ *
+ * The fixture ships with two deliberate continuity errors — a scene leaning on
+ * a fact the reader has not been given, and a character standing in a scene set
+ * after she is gone — because a clean sample demonstrates nothing.
  */
 
 import * as S from './state.js';
 
 export async function seedEcho2084() {
   const project = await S.create('project', {
-    title: 'ECHO 2084',
+    title: 'ECHO 2084 — Demo Fixture',
     kind: 'novel',
-    logline: 'A memory courier discovers the archive she protects is editing her.',
+    canon: 'provisional',
+    logline: 'Invented demonstration content. Not the author\u2019s ECHO 2084.',
   });
   const pid = project.id;
   const book = await S.create('book', {
-    projectId: pid, title: 'ECHO 2084', order: 0, targetWords: 95000,
+    projectId: pid, title: project.title, order: 0, targetWords: 95000, canon: 'provisional',
   });
   const bid = book.id;
-  const at = (f) => ({ projectId: pid, bookId: bid, ...f });
+  /* Nothing the fixture invents is canon. This is not decoration: the
+   * canon-discipline rules in lint.js read exactly this field, so the sample
+   * demonstrates the platform's central promise instead of describing it. */
+  const at = (f) => ({ projectId: pid, bookId: bid, canon: 'provisional', ...f });
 
   await S.create('note', at({
     slot: 'draft0', title: 'Draft 0',
@@ -185,7 +197,57 @@ export async function seedEcho2084() {
     presentIds: [mara.id, tessa.id],
   });
 
-  S.setUi({ projectId: pid, bookId: bid, view: 'audit', selectionId: null });
+  /* One record left as an outright AI suggestion, so the Continuity screen shows
+   * the difference between "not settled yet" and "a machine proposed this". */
+  const iyoRecord = S.get(iyo.id);
+  if (iyoRecord) await S.patch(iyo.id, { canon: 'suggested' });
+
+  await S.create('decision', at({
+    label: 'The reader learns Mara is an echo no earlier than the Cradle scene',
+    rationale: 'The whole back half depends on the reader trusting her narration. '
+      + 'Reveal it early and every scene before it reads as a trick.',
+    status: 'locked',
+  }));
+  await S.create('question', at({
+    text: 'If Mara is a reconstruction, who consented, and to what exactly?',
+    status: 'open',
+  }));
+  await S.create('idea', at({
+    text: 'What if the Cradle is not storing memory but rehearsing it?',
+  }));
+
+  await S.snapshotBook(bid, {
+    label: 'Draft 0',
+    reason: 'Preserved automatically when the demonstration fixture was created.',
+  });
+
+  S.setUi({ projectId: pid, bookId: bid, view: 'dashboard', selectionId: null });
+  return project;
+}
+
+/* The author's real project. PRD §47: placeholders where information is
+ * unknown, never invented answers. An empty Story Bible page with the right
+ * headings is worth more than a full one somebody else wrote. */
+export async function seedEchoProject() {
+  const project = await S.createProject({ title: 'ECHO 2084', kind: 'novel' });
+  const bookId = S.books(project.id)[0].id;
+  const at = (f) => ({ projectId: project.id, bookId, ...f });
+
+  await S.create('note', at({
+    slot: 'story', title: 'Premise', canon: 'provisional',
+    body: '[ Placeholder — the author has not provided this yet. ]',
+  }));
+  await S.create('note', at({
+    slot: 'story', title: 'Themes and argument', canon: 'provisional',
+    body: '[ Placeholder — the author has not provided this yet. ]',
+  }));
+  for (const text of [
+    'What is the premise, in one sentence?',
+    'Who is the protagonist and what do they want?',
+    'What does the reader learn last, and why last?',
+    'Standalone novel, or first of a series?',
+  ]) await S.create('question', at({ text, status: 'open' }));
+
   return project;
 }
 
@@ -196,7 +258,8 @@ export async function seedEcho2084() {
  * being copied three times.
  */
 export async function seedPlatform() {
-  const echo = await seedEcho2084();
+  const fixture = await seedEcho2084();
+  const echo = await seedEchoProject();
 
   await S.createProject({ title: 'Future Novel', kind: 'novel' });
 
@@ -214,11 +277,12 @@ export async function seedPlatform() {
     summary: 'The question all three books re-ask. Shared, not copied — edit it once.',
   });
 
+  /* Open on the fixture, because it is the one that demonstrates anything. */
   S.setUi({
-    projectId: echo.id,
-    bookId: S.books(echo.id)[0]?.id ?? null,
-    view: 'audit',
+    projectId: fixture.id,
+    bookId: S.books(fixture.id)[0]?.id ?? null,
+    view: 'dashboard',
     selectionId: null,
   });
-  return echo;
+  return { fixture, echo };
 }

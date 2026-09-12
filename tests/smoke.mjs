@@ -12,8 +12,9 @@ import assert from 'node:assert/strict';
 import * as S from '../assets/js/state.js';
 import { seedPlatform } from '../assets/js/seed.js';
 import { audit } from '../assets/js/lint.js';
+import { runPipeline, progress, nextAction } from '../assets/js/pipeline.js';
 import { toMarkdown, compileBook } from '../assets/js/compile.js';
-import { wordCount } from '../assets/js/model.js';
+import { wordCount, make } from '../assets/js/model.js';
 
 let passed = 0;
 const results = [];
@@ -32,12 +33,125 @@ async function test(name, fn) {
 await S.load();
 await seedPlatform();
 
-const echo = S.list('project').find((p) => p.title === 'ECHO 2084');
+const echo = S.list('project').find((p) => p.title === 'ECHO 2084 — Demo Fixture');
 const echoBook = S.books(echo.id)[0];
 
-await test('the platform seeds the three projects in the spec', () => {
+/* Every factory must let callers override its defaults. Four of them once did
+ * not, and the only symptom was records quietly filed under bookId: null. */
+await test('every record factory honours the fields passed to it', () => {
+  for (const [type, factory] of Object.entries(make)) {
+    const record = factory({ projectId: 'P', bookId: 'B', canon: 'suggested' });
+    assert.equal(record.projectId, 'P', `make.${type} ignored projectId`);
+    assert.equal(record.bookId, 'B', `make.${type} ignored bookId`);
+    assert.equal(record.canon, 'suggested', `make.${type} ignored canon`);
+    assert.equal(record.type, type, `make.${type} set the wrong type`);
+  }
+});
+
+await test('the platform seeds the projects in the spec', () => {
   const titles = S.list('project').map((p) => p.title).sort();
-  assert.deepEqual(titles, ['ECHO 2084', 'Future Novel', 'Future Series']);
+  assert.deepEqual(titles,
+    ['ECHO 2084', 'ECHO 2084 — Demo Fixture', 'Future Novel', 'Future Series']);
+});
+
+/* PRD §47: do not populate ECHO 2084 with invented canon. */
+await test('the author’s ECHO 2084 project contains no invented canon', () => {
+  const real = S.list('project').find((p) => p.title === 'ECHO 2084');
+  const bookId = S.books(real.id)[0].id;
+  assert.equal(S.entities(bookId, 'character').length, 0, 'invented characters found');
+  assert.ok(S.questions(bookId).length >= 4, 'expected placeholder open questions');
+  const pages = S.inBook('note', bookId).filter((n) => n.slot === 'story');
+  assert.ok(pages.every((n) => n.body.includes('Placeholder')),
+    'story pages must be placeholders, not invented answers');
+});
+
+/* PRD §34: an AI suggestion must never be mistaken for author-established fact. */
+await test('every record the demo fixture invents is marked non-canon', () => {
+  const invented = ['entity', 'beat', 'revelation', 'scene', 'chapter']
+    .flatMap((t) => S.inBook(t, echoBook.id));
+  const leaked = invented.filter((r) => (r.canon ?? 'canon') === 'canon');
+  assert.equal(leaked.length, 0,
+    `${leaked.length} fixture records claim canon status: ${leaked.slice(0, 3).map((r) => r.name ?? r.label ?? r.title)}`);
+});
+
+await test('drafted prose resting on unsettled facts is reported', () => {
+  const found = audit(echoBook.id).filter((f) => f.rule === 'unsettled-dependency');
+  assert.ok(found.length >= 1, 'expected the canon-discipline finding');
+  assert.equal(found[0].severity, 'warn');
+});
+
+await test('a record ruled non-canon under drafted prose is an error, not a warning', async () => {
+  const mara = S.entities(echoBook.id, 'character').find((e) => e.name === 'Mara Vance');
+  const before = mara.canon;
+  await S.patch(mara.id, { canon: 'rejected' });
+  const found = audit(echoBook.id).filter((f) => f.rule === 'rejected-canon-in-prose');
+  assert.ok(found.length >= 1);
+  assert.equal(found[0].severity, 'error');
+  await S.patch(mara.id, { canon: before });
+});
+
+/* PRD §26: never overwrite creative work. */
+await test('a snapshot preserves the book and restoring one is itself reversible', async () => {
+  const scene = S.bookScenes(echoBook.id)[0];
+  const original = scene.prose;
+  const before = S.versions(echoBook.id).length;
+
+  await S.snapshotBook(echoBook.id, { label: 'Test point', reason: 'unit test' });
+  assert.equal(S.versions(echoBook.id).length, before + 1);
+
+  await S.patch(scene.id, { prose: 'Destroyed by the test.' });
+  assert.equal(S.get(scene.id).prose, 'Destroyed by the test.');
+
+  const point = S.versions(echoBook.id).find((v) => v.label === 'Test point');
+  await S.restoreVersion(point.id);
+  assert.equal(S.get(scene.id).prose, original, 'restore did not bring the prose back');
+
+  const safety = S.versions(echoBook.id).find((v) => v.label.startsWith('Before restoring'));
+  assert.ok(safety, 'restoring must snapshot the present first');
+});
+
+await test('snapshots never nest inside snapshots', async () => {
+  const point = S.versions(echoBook.id)[0];
+  const records = JSON.parse(point.snapshot);
+  assert.equal(records.filter((r) => r.type === 'version').length, 0);
+});
+
+/* PRD §25 and §41. */
+await test('the 17-stage pipeline computes itself from the graph', () => {
+  const stages = runPipeline(echoBook.id);
+  assert.equal(stages.length, 17);
+  assert.ok(stages.every((s) => ['done', 'partial', 'todo', 'pending'].includes(s.state)));
+  assert.equal(stages[14].state, 'pending', 'Realism Audit has no AI layer and must say so');
+});
+
+await test('progress ignores stages blocked on modules that do not exist', () => {
+  const stages = runPipeline(echoBook.id);
+  const pct = progress(stages);
+  assert.ok(pct > 0 && pct < 100, `expected a partial score, got ${pct}`);
+  const pendingCounted = stages.filter((s) => s.state === 'pending').length;
+  assert.ok(pendingCounted >= 1, 'the fixture should have at least one pending stage');
+});
+
+await test('the dashboard can always name one next action', () => {
+  const next = nextAction(runPipeline(echoBook.id));
+  assert.ok(next && next.name && next.view, 'expected a single actionable next stage');
+});
+
+/* A controlled rewrite is a sequence. Pointing the author at a late stage while
+ * an early one is unfinished is the uncontrolled rewrite the method prevents. */
+await test('the next action is the earliest unfinished stage, not the furthest', () => {
+  const stages = runPipeline(echoBook.id);
+  const next = nextAction(stages);
+  const earlier = stages.filter((s) =>
+    s.n < next.n && (s.state === 'todo' || s.state === 'partial'));
+  assert.equal(earlier.length, 0,
+    `stage ${next.n} was proposed while ${earlier.map((s) => s.n)} remain unfinished`);
+});
+
+await test('a locked decision is recorded with its reason', () => {
+  const locked = S.decisions(echoBook.id).filter((d) => d.status === 'locked');
+  assert.ok(locked.length >= 1);
+  assert.ok(locked[0].rationale.length > 20, 'a decision without a reason is not a decision');
 });
 
 await test('a series gets its books; a standalone novel gets exactly one', () => {

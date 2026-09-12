@@ -83,6 +83,15 @@ export const entities = (bookId, kind = null) => {
 
 export const beats = (bookId) => sortByOrder(inBook('beat', bookId));
 export const revelations = (bookId) => inBook('revelation', bookId);
+export const decisions = (bookId) => inBook('decision', bookId);
+export const questions = (bookId) => inBook('question', bookId);
+export const ideas = (bookId) => inBook('idea', bookId);
+
+/* Versions are strictly per-book and never series-shared: restoring a snapshot
+ * must not reach sideways into a sibling book the author did not ask about. */
+export const versions = (bookId) =>
+  list('version').filter((v) => v.bookId === bookId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 export const entityName = (id) => get(id)?.name ?? '—';
 
@@ -195,6 +204,58 @@ export async function moveSceneToChapter(sceneId, chapterId) {
   await patchMany(reindex(scenesOf(scene.chapterId)).map(({ id, order }) => ({ id, order })));
 }
 
+/* --- versions (PRD §26: never overwrite creative work) ------------------ */
+
+/* What belongs to a snapshot: every record scoped to this book, plus the
+ * project-level records it depends on. Versions themselves are excluded —
+ * a snapshot of the snapshots would double in size every time you took one. */
+function bookPayload(bookId) {
+  const book = byId.get(bookId);
+  if (!book) return [];
+  return [...byId.values()].filter((r) => {
+    if (r.type === 'version') return false;
+    if (r.id === bookId) return true;
+    if (r.bookId === bookId) return true;
+    return r.bookId == null && r.projectId === book.projectId && r.type !== 'project';
+  });
+}
+
+export async function snapshotBook(bookId, { label, reason = '', aiInvolved = false }) {
+  const records = bookPayload(bookId);
+  const book = byId.get(bookId);
+  return create('version', {
+    projectId: book.projectId,
+    bookId,
+    label,
+    reason,
+    aiInvolved,
+    words: bookWords(bookId),
+    snapshot: JSON.stringify(records),
+  });
+}
+
+/* Restoring is itself a destructive act, so it takes its own snapshot first.
+ * The author can always get back to the state they were in ten seconds ago,
+ * which is the state they will want back roughly one time in five. */
+export async function restoreVersion(versionId) {
+  const version = byId.get(versionId);
+  if (!version) throw new Error('restore: no such version');
+
+  await snapshotBook(version.bookId, {
+    label: `Before restoring “${version.label}”`,
+    reason: 'Automatic safety snapshot taken before a restore.',
+  });
+
+  const incoming = JSON.parse(version.snapshot);
+  const incomingIds = new Set(incoming.map((r) => r.id));
+  const stale = bookPayload(version.bookId).filter((r) => !incomingIds.has(r.id));
+
+  await store.removeMany(stale.map((r) => r.id));
+  stale.forEach((r) => byId.delete(r.id));
+  await commit(incoming);
+  return incoming.length;
+}
+
 /* --- project scaffolding ----------------------------------------------- */
 
 /* Creating a project pre-builds the nine sections' backing records so the
@@ -222,7 +283,7 @@ export async function createProject({ title, kind, bookCount = 1 }) {
       title: 'Opening scene', order: 0,
     });
   }
-  setUi({ projectId: project.id, bookId: firstBookId, view: 'draft0', selectionId: null });
+  setUi({ projectId: project.id, bookId: firstBookId, view: 'dashboard', selectionId: null });
   return project;
 }
 

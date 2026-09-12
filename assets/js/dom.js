@@ -78,6 +78,18 @@ export function checkList(options, selected, onchange) {
       h('span', {}, o.label))) : h('p', { class: 'empty' }, 'Nothing to choose yet.'));
 }
 
+/* PRD §34 — canon status belongs on every editable record, and it must look
+ * identical everywhere. An AI suggestion that renders like an author's decision
+ * is exactly the laundering this platform exists to prevent. */
+export function canonControl(record, onchange, CANON, CANON_ORDER) {
+  return h('div', { class: 'canon-row' },
+    CANON_ORDER.map((key) => h('button', {
+      class: `canon-chip ${key} ${(record.canon ?? 'canon') === key ? 'on' : ''}`,
+      title: CANON[key].blurb,
+      onclick: () => onchange(key),
+    }, CANON[key].mark, ' ', CANON[key].label)));
+}
+
 export function confirmDanger(message) {
   return window.confirm(`${message}\n\nThis cannot be undone.`);
 }
