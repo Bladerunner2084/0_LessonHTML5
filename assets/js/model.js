@@ -17,7 +17,7 @@
 
 export const RECORD_TYPES = [
   'project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene', 'note',
-  'decision', 'question', 'idea', 'version', 'wordlog', 'submission',
+  'decision', 'question', 'idea', 'version', 'wordlog', 'submission', 'script',
 ];
 
 /* PRD §35/§36 — the three routes out of a finished manuscript. The platform
@@ -40,11 +40,15 @@ export const PATHWAYS = {
   /* Print-on-demand sold from the author's own storefront. The highest margin
    * per copy by a wide margin, and the only route where the author is also the
    * retailer — which is a legal position, not just a technical one. */
+  /* The platform never takes custody of the money. It prepares the files and
+   * tracks the rails; the author connects their own storefront, printer and
+   * payment processor, and the customer pays the author directly. Same outcome
+   * for the writer, and the platform never becomes a regulated money business. */
   direct: {
     label: 'Direct to reader',
-    blurb: 'Your storefront, print-on-demand fulfilment, money to your own bank. '
-      + 'Best margin per copy, and you become the merchant — tax, returns and '
-      + 'support included.',
+    blurb: 'Your own storefront and print-on-demand account, customers paying you '
+      + 'directly. Best margin per copy. This app prepares the files and tracks the '
+      + 'rails — it never touches the money.',
   },
 };
 
@@ -277,6 +281,21 @@ export const make = {
     sentOn: '',
     status: 'planned',      // planned | sent | replied | offer | rejected | live
     notes: '',
+    ...f,
+  }),
+
+  /* A screenplay derived from the prose. It is a SEPARATE record, never an
+   * edit of the manuscript: converting must not put a single scene of the novel
+   * at risk, and the author has to be able to diverge the script freely from
+   * the book without the two fighting. */
+  script: (f = {}) => base('script', {
+    projectId: null,
+    bookId: null,
+    title: 'Screenplay',
+    format: 'fountain',
+    body: '',
+    generatedAt: '',        // when it was last regenerated from prose
+    editedSince: false,     // has a human touched it since generation
     ...f,
   }),
 

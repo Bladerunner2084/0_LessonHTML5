@@ -18,6 +18,7 @@ NOVEL DEVELOPMENT PLATFORM
 │   ├── Chapter Map        containers and pacing
 │   ├── Scene Map          the atomic unit — prose lives here
 │   ├── Manuscript         compiled output, read-only
+│   ├── Screenplay         converted from prose; the novel stays untouched
 │   ├── Reader Simulator   what the reader holds — and has forgotten
 │   ├── Continuity         computed contradictions
 │   ├── Decision Log       locked author decisions, authoritative
@@ -46,7 +47,8 @@ an S3 bucket, a Raspberry Pi on your desk.
 ```bash
 node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace tests
 node tests/reader.mjs           # 17 tests for the Reader Model
-node tests/browser.mjs          # 49 tests driving the real app in Chromium
+node tests/script.mjs           # 21 tests for the screenplay converter
+node tests/browser.mjs          # 60 tests driving the real app in Chromium
 ```
 
 The browser suite serves the repo on an ephemeral port and needs Playwright
@@ -110,13 +112,20 @@ quality floor), and **Direct to reader** — print-on-demand fulfilment from the
 author's own storefront, money to their own bank. Shared obligations carry
 across all four.
 
-The direct route is the highest margin per copy and the only one where the
-author becomes the **retailer**, so its checklist leads with the things authors
-discover *after* the first sale: merchant of record, sales tax and VAT per
-territory, returns policy, chargebacks, and unit economics proved against the
-actual print and shipping cost. The production items sit above them because a
-spine width computed from a stale page count is found at the proof stage and
-costs a week.
+The direct route is the highest margin per copy, and the author is the retailer.
+**This application is deliberately never in the payment path.** The customer pays
+the author through the author's own processor; the app prepares the files and
+tracks the rails. Putting the money through the platform instead would make it a
+money transmitter in several jurisdictions — licensing, identity checks,
+chargeback liability — for an outcome identical from the writer's side. That is
+an architectural commitment, so a test asserts it rather than trusting it to
+memory.
+
+Its checklist leads with production, because a spine width computed from a stale
+page count is discovered at the proof stage and costs a week. Then the things
+authors discover *after* the first sale: sales tax and VAT per shipped territory,
+returns, chargebacks, and unit economics proved against real print and shipping
+cost.
 
 Two checklist items — *manuscript complete* and *continuity clean* — cannot be
 ticked by hand. They are computed, because ticking them yourself while the
@@ -185,6 +194,34 @@ Three consequences worth stating plainly:
   engine report ghosts, which is worse than reporting nothing.
 - **Series-shared records carry `bookId: null`.** Three books, one character
   bible, zero copies. Edit the character once.
+
+## Screenplay mode
+
+A button converts the Scene Map into a screenplay. Two guarantees, both
+structural rather than promised:
+
+- **The novel is never touched.** The screenplay is its own record. There is no
+  code path from screenplay mode back into a scene's prose, and a test asserts it.
+- **Your edits are never silently lost.** Once a human has touched the script,
+  re-converting snapshots the whole book to the Draft Vault first and says so.
+
+The format is **Fountain** — plain text, an open standard, and it imports into
+Final Draft. Export is `.fountain` or `.fdx`. A screenplay that cannot leave the
+tool it was written in is not a screenplay.
+
+**What the converter claims, and what it refuses.** It lays out the skeleton:
+scene headings from each scene's location and time of day (reading a real clock,
+so 23:40 is NIGHT), dialogue split out from attributed speech, action from the
+remaining prose. It does **not** rewrite prose into screen action. Turning *"she
+remembered the fire"* into something a camera can see is a craft judgement, and a
+machine that silently attempts it produces confident nonsense. Every place it is
+unsure emits a Fountain note — `[[like this]]` — that the writer can search for:
+unattributed dialogue, two speakers in one paragraph, interior state a camera
+cannot see, unwritten scenes, missing locations. A visible gap beats an invisible
+guess.
+
+The byline is left blank. The platform does not know who wrote the book, and a
+guessed byline is how a draft goes out under the wrong name.
 
 ## The Reader Simulator
 
@@ -287,6 +324,7 @@ assets/js/lint.js           the continuity engine
 assets/js/pipeline.js       the 17-stage Controlled Rewrite, computed
 assets/js/pace.js           deadlines, measured velocity, honest verdicts
 assets/js/reader.js         the Reader Model — recall decay, tension, cast load
+assets/js/script.js         prose to Fountain, Fountain to page, Final Draft export
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
@@ -294,7 +332,8 @@ assets/js/seed.js           the ECHO 2084 sample, faults included
 assets/js/views/*.js        one module per screen
 tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
 tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
-tests/browser.mjs           49 end-to-end tests against a real Chromium
+tests/script.mjs            21 screenplay conversion and export tests
+tests/browser.mjs           60 end-to-end tests against a real Chromium
 .github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
 

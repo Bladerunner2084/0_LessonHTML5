@@ -19,6 +19,7 @@ import { renderVault } from './views/vault.js';
 import { renderDecisions, renderInbox } from './views/authority.js';
 import { renderPublish } from './views/publish.js';
 import { renderReader } from './views/reader.js';
+import { renderScreenplay } from './views/screenplay.js';
 import { logWords } from './pace.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
@@ -35,6 +36,7 @@ const VIEWS = {
   chapters: renderChapters,
   scenes: renderScenes,
   manuscript: renderManuscript,
+  screenplay: renderScreenplay,
   reader: renderReader,
   audit: renderAudit,
   decisions: renderDecisions,

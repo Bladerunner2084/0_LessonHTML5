@@ -57,6 +57,12 @@ const CHECKLISTS = {
    * because a wrong spine width is discovered at the proof stage and costs a
    * week; the money and tax items come next because they are the ones authors
    * discover after the first sale, which is the worst possible time. */
+  /* Deliberately NOT a custodial model. The customer pays the author, through
+   * the author's own processor; this application never holds funds, so it never
+   * becomes a money transmitter with the licensing, identity checks and
+   * chargeback liability that position carries. The author gets the identical
+   * outcome. The checklist below is therefore the author's own setup, ordered by
+   * what actually blocks a launch. */
   direct: [
     ...COMMON,
     ['interior', 'Print-ready interior PDF at the printer’s spec — bleed, trim, gutter'],
@@ -64,9 +70,10 @@ const CHECKLISTS = {
     ['proof', 'Physical proof copy ordered, held, and approved'],
     ['pod', 'Print-on-demand partner chosen and account linked'],
     ['store', 'Storefront live on your own domain'],
-    ['payments', 'Payment processor connected to your bank account'],
-    ['mor', 'Merchant of record decided — who is legally making the sale'],
+    ['payments', 'Your own payment processor, paying into your own bank account'],
+    ['mor', 'Merchant of record: YOU. This app is never in the payment path'],
     ['tax', 'Sales tax / VAT registration and collection, per territory you ship to'],
+    ['chargebacks', 'Chargeback and fraud policy agreed with your processor'],
     ['shipping', 'Shipping rates, delivery estimates and a returns policy published'],
     ['economics', 'Unit economics proved: print + shipping + fees against your price'],
     ['support', 'A support channel — a physical product generates physical problems'],

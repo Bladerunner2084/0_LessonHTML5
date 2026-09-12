@@ -57,11 +57,12 @@ if (!pw) {
 }
 
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
-  'revelations', 'chapters', 'scenes', 'manuscript', 'reader', 'audit', 'decisions', 'inbox',
-  'publish'];
+  'revelations', 'chapters', 'scenes', 'manuscript', 'screenplay', 'reader', 'audit',
+  'decisions', 'inbox', 'publish'];
 const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
-  'Reader Simulator', 'Continuity', 'Decision Log', 'Questions & Ideas', 'Publication'];
+  'Screenplay', 'Reader Simulator', 'Continuity', 'Decision Log', 'Questions & Ideas',
+  'Publication'];
 
 const results = [];
 let passed = 0;
@@ -212,8 +213,9 @@ try {
   await page.waitForTimeout(250);
   check('publication offers all four routes, direct-to-reader included',
     await page.locator('.pathway').count() === 4);
-  check('the direct route is present and describes the merchant burden',
-    /merchant/i.test(await page.locator('.pathway', { hasText: 'Direct to reader' }).innerText()));
+  check('the direct route promises the app stays out of the money',
+    /never touches the money/i.test(
+      await page.locator('.pathway', { hasText: 'Direct to reader' }).innerText()));
   check('no checklist appears until a route is chosen',
     await page.locator('.pub-list').count() === 0);
 
@@ -231,6 +233,10 @@ try {
   const directText = await page.locator('.pub-list').innerText();
   check('the direct route names the tax and merchant-of-record obligations',
     /merchant of record/i.test(directText) && /VAT/i.test(directText), directText.slice(0, 120));
+  /* The platform must never put itself in the payment path — that is an
+   * architectural commitment, so it is asserted rather than remembered. */
+  check('the direct route states the app is never in the payment path',
+    /never in the payment path/i.test(directText));
   check('the direct route names the unit economics',
     /unit economics/i.test(directText));
 
@@ -280,6 +286,40 @@ try {
   await page.waitForTimeout(200);
   check('hovering the curve explains the point',
     await page.locator('.chart-tip:not([hidden])').count() === 1);
+
+  /* Screenplay mode: convert, edit, and leave the novel untouched. */
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('scenes')).click();
+  await page.waitForTimeout(250);
+  await page.locator('.scene-outline .list-item').first().click();
+  await page.waitForTimeout(250);
+  const novelBefore = await page.locator('.prose-area').inputValue();
+
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('screenplay')).click();
+  await page.waitForTimeout(250);
+  check('screenplay mode explains itself before converting anything',
+    await page.locator('.script-source').count() === 0);
+
+  await page.getByRole('button', { name: 'Convert to screenplay' }).click();
+  await page.waitForTimeout(600);
+  const fountain = await page.locator('.script-source').inputValue();
+  check('conversion produces Fountain with scene headings',
+    /INT\.|EXT\./.test(fountain), fountain.slice(0, 80));
+  check('the rendered page shows screenplay elements, not raw text',
+    await page.locator('.script-page .sp-heading').count() >= 1);
+  check('decisions the converter refused to make are shown as notes',
+    await page.locator('.script-page .sp-note').count() >= 1);
+
+  await page.locator('.script-source').fill(`${fountain}\n\nFADE OUT.`);
+  await page.waitForTimeout(800);
+  check('the screenplay is editable and the page follows',
+    /FADE OUT/.test(await page.locator('.script-page').innerText()));
+
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('scenes')).click();
+  await page.waitForTimeout(300);
+  await page.locator('.scene-outline .list-item').first().click();
+  await page.waitForTimeout(250);
+  check('converting and editing the screenplay left the novel untouched',
+    (await page.locator('.prose-area').inputValue()) === novelBefore);
 
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {
