@@ -57,10 +57,10 @@ if (!pw) {
 }
 
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
-  'revelations', 'chapters', 'scenes', 'manuscript', 'audit', 'decisions', 'inbox'];
+  'revelations', 'chapters', 'scenes', 'manuscript', 'audit', 'decisions', 'inbox', 'publish'];
 const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
-  'Continuity', 'Decision Log', 'Questions & Ideas'];
+  'Continuity', 'Decision Log', 'Questions & Ideas', 'Publication'];
 
 const results = [];
 let passed = 0;
@@ -185,6 +185,48 @@ try {
   await page.waitForTimeout(250);
   check('the decision log carries a locked decision with its reason',
     await page.locator('.card.decision.locked').count() >= 1);
+
+  /* Deadlines: opt-in, and the panel must be willing to say no. */
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('dashboard')).click();
+  await page.waitForTimeout(250);
+  check('the word count is on the dashboard without being asked for',
+    await page.locator('.pace-count').count() === 1);
+  check('the deadline is off until switched on',
+    await page.locator('.pace-controls').count() === 0);
+
+  await page.locator('.pace-toggle input').check();
+  await page.waitForTimeout(300);
+  check('switching the deadline on reveals the date and pace controls',
+    await page.locator('.pace-controls input[type="date"]').count() === 1);
+
+  const soon = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+  await page.locator('.pace-controls input[type="date"]').fill(soon);
+  await page.waitForTimeout(400);
+  check('an unreachable deadline is reported as impossible, not encouraged',
+    (await page.locator('.pace-message').textContent())?.includes('new date or a smaller book'));
+  check('an impossible pace is styled as a problem', await page.locator('.pace.bad').count() === 1);
+
+  /* Publication: three routes, and a readiness gate that cannot be ticked. */
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('publish')).click();
+  await page.waitForTimeout(250);
+  check('publication offers all three routes',
+    await page.locator('.pathway').count() === 3);
+  check('no checklist appears until a route is chosen',
+    await page.locator('.pub-list').count() === 0);
+
+  await page.locator('.pathway', { hasText: 'Self-publishing' }).click();
+  await page.waitForTimeout(300);
+  check('choosing a route reveals what it actually requires',
+    await page.locator('.pub-list li').count() >= 12);
+  check('the computed readiness items cannot be ticked by hand',
+    await page.locator('.pub-list input[disabled]').count() === 2);
+
+  await page.locator('.pathway', { hasText: 'Traditional' }).click();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: '+ Add entry' }).click();
+  await page.waitForTimeout(400);
+  check('the submission tracker records a query',
+    await page.locator('.sub-row').count() === 1);
 
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {

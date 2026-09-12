@@ -20,7 +20,8 @@ NOVEL DEVELOPMENT PLATFORM
 │   ├── Manuscript         compiled output, read-only
 │   ├── Continuity         computed contradictions
 │   ├── Decision Log       locked author decisions, authoritative
-│   └── Questions & Ideas  unanswered questions and raw, unfiled ideas
+│   ├── Questions & Ideas  unanswered questions and raw, unfiled ideas
+│   └── Publication        traditional · self · AI-assisted
 │
 ├── Novel Project: Future Novel
 │
@@ -42,8 +43,8 @@ protocol by browser CORS rules. Any static host works: GitHub Pages, Netlify,
 an S3 bucket, a Raspberry Pi on your desk.
 
 ```bash
-node tests/smoke.mjs            # 28 graph, canon, version and pipeline tests
-node tests/browser.mjs          # 30 tests driving the real app in Chromium
+node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace tests
+node tests/browser.mjs          # 41 tests driving the real app in Chromium
 ```
 
 The browser suite serves the repo on an ephemeral port and needs Playwright
@@ -77,6 +78,37 @@ than faked — the PRD's own instruction.
 | 12. Controlled Rewrite | built — 17 stages, each computed from the graph |
 | 13. Manuscript View | built — read-only, compiled |
 | 14. AI Writers' Room | **not built** — transport undecided, see below |
+| §35 Publication Mode | built — three routes, checklists, submission tracker |
+| §36 Standalone vs series | built — chosen at project creation |
+
+### Deadlines and pace
+
+A word count sits on the dashboard permanently. A deadline is **opt-in** — one
+toggle — because a deadline imposed by default is ambient guilt, and a writer
+who feels watched by their own software stops opening it, which costs more words
+than any deadline earns.
+
+Switched on, it takes a due date and how many days a week you actually write,
+then does the arithmetic nobody wants to do. Velocity is **measured**: the app
+records the book's word count each day it is opened, so the projection comes
+from history rather than optimism.
+
+It will tell you no. Past roughly 3,000 words per writing day the verdict is
+`impossible`, and the message says to change the date or cut the book. A tool
+that answers "you can still make it!" at that pace is not encouraging — it is
+lying, and the author finds out too late to act on it.
+
+### Publication (§35)
+
+Three routes, each with the obligations it actually carries: **Traditional**
+(query, synopsis, comps, agent research, submission log), **Self-publishing**
+(cover, interior, ISBN, copyright, distribution, pricing, ARCs, launch), and
+**AI-assisted** (human editorial pass, disclosure, imagery rights, metadata,
+quality floor). Shared obligations carry across all three.
+
+Two checklist items — *manuscript complete* and *continuity clean* — cannot be
+ticked by hand. They are computed, because ticking them yourself while the
+engine disagrees is precisely the self-deception this application removes.
 
 ### Canon status (§34 and §2)
 
@@ -202,13 +234,14 @@ assets/js/store.js          IndexedDB, JSON export/import, memory fallback
 assets/js/state.js          in-memory index, selectors, mutators, cascades
 assets/js/lint.js           the continuity engine
 assets/js/pipeline.js       the 17-stage Controlled Rewrite, computed
+assets/js/pace.js           deadlines, measured velocity, honest verdicts
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
 assets/js/seed.js           the ECHO 2084 sample, faults included
 assets/js/views/*.js        one module per screen
-tests/smoke.mjs             28 graph, canon, version and pipeline tests
-tests/browser.mjs           30 end-to-end tests against a real Chromium
+tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
+tests/browser.mjs           41 end-to-end tests against a real Chromium
 .github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
 
@@ -234,6 +267,31 @@ lies:
 - **No AI layer.** The Writers' Room (§31), Red Team (§32), Realism Audit (§16),
   prose-level Character Lock (§4) and the Style Engine all wait on one decision
   that has not been made — see below.
+
+## What "SaaS" would still require
+
+The stated goal is a product other writers use, not a personal tool. This
+application is not that yet, and the gap is not features — it is that **every
+word lives in one browser on one machine.** There are no accounts, no sync, no
+sharing, no billing, and no way to recover a project from a cleared cache beyond
+the JSON backup the author remembered to take.
+
+Four things stand between here and a product, in the order they bite:
+
+1. **Identity and storage.** Accounts, and the manuscript living somewhere other
+   than `IndexedDB`. Everything else depends on this one.
+2. **Sync and conflict resolution.** Two devices editing one scene is a merge
+   problem, and prose merges badly. The version model here helps; it does not
+   solve it.
+3. **Billing, and what happens when someone stops paying.** A writer must be
+   able to export a complete, readable manuscript from a lapsed account. Anything
+   else holds a book hostage.
+4. **Support and data-loss liability.** The moment strangers trust it with a
+   novel, "back up your own work" stops being an acceptable answer.
+
+None of that is hard in isolation. All of it contradicts the property that makes
+the current build durable — no server, no account, no company to outlive — so it
+is a deliberate trade, recorded here rather than drifted into.
 
 ## The undecided question: how the AI reaches the page
 

@@ -17,6 +17,8 @@ import { renderAudit } from './views/audit.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderVault } from './views/vault.js';
 import { renderDecisions, renderInbox } from './views/authority.js';
+import { renderPublish } from './views/publish.js';
+import { logWords } from './pace.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
 
@@ -35,6 +37,7 @@ const VIEWS = {
   audit: renderAudit,
   decisions: renderDecisions,
   inbox: renderInbox,
+  publish: renderPublish,
 };
 
 const el = {};
@@ -148,6 +151,17 @@ async function main() {
   await S.load();
   render();
   bindKeys();
+
+  /* Record where each open book stands today, so pace is measured from real
+   * history rather than estimated from optimism. Debounced because a repaint
+   * fires on every keystroke's flush, and one row per book per day is enough. */
+  let logging = null;
+  const recordToday = () => {
+    clearTimeout(logging);
+    logging = setTimeout(() => { if (S.ui.bookId) logWords(S.ui.bookId); }, 2500);
+  };
+  S.subscribe(recordToday);
+  recordToday();
 }
 
 main();

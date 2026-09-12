@@ -9,9 +9,69 @@ import { h } from '../dom.js';
 import * as S from '../state.js';
 import { audit, summarise } from '../lint.js';
 import { runPipeline, progress, nextAction } from '../pipeline.js';
+import { paceReport, VERDICT_TONE, velocity } from '../pace.js';
 import { wordCount } from '../model.js';
 
 const STATE_MARK = { done: '●', partial: '◐', todo: '○', pending: '◌' };
+
+/* The deadline is opt-in and stays off until asked for. Imposed by default it
+ * becomes ambient guilt, and a writer who feels watched by their own software
+ * stops opening it — which costs far more words than any deadline earns. */
+function paceCard(bookId, book) {
+  const report = paceReport(bookId);
+  const v = velocity(bookId);
+  const on = !!book?.deadlineOn;
+
+  const pct = book?.targetWords
+    ? Math.min(100, Math.round((report.words / book.targetWords) * 100)) : 0;
+
+  return h('section', { class: `pace ${VERDICT_TONE[report.verdict] ?? ''}` },
+    h('div', { class: 'pace-head' },
+      h('div', { class: 'pace-words' },
+        h('span', { class: 'pace-count' }, report.words.toLocaleString()),
+        h('span', { class: 'muted' },
+          ` of ${(book?.targetWords ?? 0).toLocaleString()} words`),
+        book?.targetWords
+          ? h('div', { class: 'meter' }, h('span', { style: { width: `${pct}%` } }))
+          : null),
+      h('label', { class: 'check pace-toggle' },
+        h('input', {
+          type: 'checkbox', checked: on,
+          onchange: (e) => S.patch(bookId, { deadlineOn: e.target.checked }),
+        }),
+        h('span', {}, 'Deadline'))),
+
+    on ? h('div', { class: 'row pace-controls' },
+      h('label', { class: 'field' },
+        h('span', { class: 'field-label' }, 'Due'),
+        h('input', {
+          type: 'date', value: book.deadline ?? '',
+          onchange: (e) => S.patch(bookId, { deadline: e.target.value }),
+        })),
+      h('label', { class: 'field' },
+        h('span', { class: 'field-label' }, 'Writing days per week'),
+        h('input', {
+          type: 'number', min: 1, max: 7, class: 'num', value: book.writingDays ?? 7,
+          onchange: (e) => S.patch(bookId, {
+            writingDays: Math.min(7, Math.max(1, Number(e.target.value) || 7)),
+          }),
+        })),
+      h('label', { class: 'field' },
+        h('span', { class: 'field-label' }, 'Total target'),
+        h('input', {
+          type: 'number', class: 'num', value: book.targetWords ?? 0,
+          onchange: (e) => S.patch(bookId, { targetWords: Number(e.target.value) || 0 }),
+        }))) : null,
+
+    h('p', { class: 'pace-message' }, report.message),
+
+    v ? h('p', { class: 'sub' },
+      `Measured from ${v.days} day(s) of history (${v.from} → ${v.to}). `
+      + 'The figure gets truer the longer you use it.')
+      : h('p', { class: 'sub' },
+        'Pace is measured, not estimated. Open the app on a second day and this becomes '
+        + 'a real number.'));
+}
 
 export function renderDashboard(bookId) {
   const book = S.get(bookId);
@@ -62,6 +122,8 @@ export function renderDashboard(bookId) {
           h('p', { class: 'sub' },
             'Every stage the platform can check is finished. What remains needs a '
             + 'reader, not an audit.')),
+
+      paceCard(bookId, book),
 
       h('div', { class: 'stat-grid' },
         stat('chapters', S.chapters(bookId).length, 'chapters'),

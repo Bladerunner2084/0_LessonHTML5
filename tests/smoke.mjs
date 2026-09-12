@@ -13,6 +13,7 @@ import * as S from '../assets/js/state.js';
 import { seedPlatform } from '../assets/js/seed.js';
 import { audit } from '../assets/js/lint.js';
 import { runPipeline, progress, nextAction } from '../assets/js/pipeline.js';
+import { paceReport, velocity, logWords, today, daysBetween } from '../assets/js/pace.js';
 import { toMarkdown, compileBook } from '../assets/js/compile.js';
 import { wordCount, make } from '../assets/js/model.js';
 
@@ -146,6 +147,78 @@ await test('the next action is the earliest unfinished stage, not the furthest',
     s.n < next.n && (s.state === 'todo' || s.state === 'partial'));
   assert.equal(earlier.length, 0,
     `stage ${next.n} was proposed while ${earlier.map((s) => s.n)} remain unfinished`);
+});
+
+/* --- deadlines and pace ------------------------------------------------- */
+
+const dayOffset = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+
+await test('with no deadline set, nothing counts down', () => {
+  const r = paceReport(echoBook.id);
+  assert.equal(r.verdict, 'none');
+  assert.ok(r.words >= 0 && r.target > 0);
+});
+
+await test('a reachable deadline reports the daily rate it needs', async () => {
+  await S.patch(echoBook.id, {
+    deadlineOn: true, deadline: dayOffset(200), writingDays: 7, targetWords: 95000,
+  });
+  const r = paceReport(echoBook.id);
+  assert.ok(['unknown', 'behind', 'on-track', 'ahead'].includes(r.verdict), r.verdict);
+  assert.ok(r.requiredPerDay > 0 && r.requiredPerDay < 3000);
+  assert.equal(r.daysLeft, 200);
+});
+
+/* The feature only earns its place if it will say no. */
+await test('an unreachable deadline is called impossible, not encouraged', async () => {
+  await S.patch(echoBook.id, { deadlineOn: true, deadline: dayOffset(5) });
+  const r = paceReport(echoBook.id);
+  assert.equal(r.verdict, 'impossible');
+  assert.match(r.message, /new date or a smaller book/);
+});
+
+await test('a deadline already passed says so plainly', async () => {
+  await S.patch(echoBook.id, { deadlineOn: true, deadline: dayOffset(-9) });
+  const r = paceReport(echoBook.id);
+  assert.equal(r.verdict, 'passed');
+  assert.match(r.message, /passed 9 day/);
+});
+
+await test('writing days per week shrink the days actually available', async () => {
+  await S.patch(echoBook.id, { deadlineOn: true, deadline: dayOffset(70), writingDays: 7 });
+  const seven = paceReport(echoBook.id);
+  await S.patch(echoBook.id, { writingDays: 2 });
+  const two = paceReport(echoBook.id);
+  assert.ok(two.writingDaysLeft < seven.writingDaysLeft);
+  assert.ok(two.requiredPerDay > seven.requiredPerDay,
+    'fewer writing days must demand more words on each of them');
+});
+
+await test('velocity is measured from recorded history, never guessed', async () => {
+  assert.equal(velocity(echoBook.id), null, 'no history yet should measure nothing');
+  const book = S.get(echoBook.id);
+  await S.create('wordlog', {
+    projectId: book.projectId, bookId: echoBook.id, date: dayOffset(-10), words: 1000,
+  });
+  await S.create('wordlog', {
+    projectId: book.projectId, bookId: echoBook.id, date: dayOffset(-0), words: 6000,
+  });
+  const v = velocity(echoBook.id);
+  assert.equal(v.days, 10);
+  assert.equal(v.perDay, 500);
+});
+
+await test('logging words is idempotent within a day', async () => {
+  const bookId = S.books(S.list('project').find((p) => p.title === 'Future Novel').id)[0].id;
+  await logWords(bookId);
+  await logWords(bookId);
+  const rows = S.list('wordlog').filter((w) => w.bookId === bookId && w.date === today());
+  assert.equal(rows.length, 1, 'a second call the same day must update, not duplicate');
+});
+
+await test('day arithmetic is inclusive of direction', () => {
+  assert.equal(daysBetween('2026-01-01', '2026-01-08'), 7);
+  assert.equal(daysBetween('2026-03-10', '2026-03-01'), -9);
 });
 
 await test('a locked decision is recorded with its reason', () => {

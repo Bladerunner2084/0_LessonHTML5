@@ -17,8 +17,27 @@
 
 export const RECORD_TYPES = [
   'project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene', 'note',
-  'decision', 'question', 'idea', 'version',
+  'decision', 'question', 'idea', 'version', 'wordlog', 'submission',
 ];
+
+/* PRD §35/§36 — the three routes out of a finished manuscript. The platform
+ * carries the author to the door of each and is honest that it cannot walk
+ * through it for them. */
+export const PATHWAYS = {
+  traditional: {
+    label: 'Traditional',
+    blurb: 'Agent, then publisher. Slowest, highest reach, you keep the least.',
+  },
+  self: {
+    label: 'Self-publishing',
+    blurb: 'You are the publisher. Fastest, full control, every cost is yours.',
+  },
+  assisted: {
+    label: 'AI-assisted',
+    blurb: 'Tooling handles production and distribution. Fast, cheap, and the '
+      + 'quality floor is entirely your own editorial discipline.',
+  },
+};
 
 /* PRD §34 — canon status, and §2's author-confirmed / AI-inferred / unresolved
  * distinction, are the same axis, so they are one field rather than two.
@@ -104,6 +123,14 @@ export const make = {
     title: 'Book 1',
     order: 0,
     targetWords: 90000,
+    /* A deadline is opt-in. Imposed by default it becomes ambient guilt, and a
+     * writer who feels watched by their own software stops opening it. */
+    deadlineOn: false,
+    deadline: '',           // 'YYYY-MM-DD'
+    writingDays: 7,         // days per week the author actually writes
+    pathway: null,          // see PATHWAYS — chosen in Publication Mode
+    pubChecks: {},          // checklist key -> true
+    published: false,
     ...f,
   }),
 
@@ -216,6 +243,31 @@ export const make = {
     aiInvolved: false,
     words: 0,
     snapshot: '',           // serialised records, restored wholesale
+    ...f,
+  }),
+
+  /* One row per book per day. Velocity measured from real history beats any
+   * estimate, and it is the only way to tell an author whether a deadline is
+   * ambitious or arithmetically impossible. */
+  wordlog: (f = {}) => base('wordlog', {
+    projectId: null,
+    bookId: null,
+    date: '',               // 'YYYY-MM-DD'
+    words: 0,               // total book words at end of that day
+    ...f,
+  }),
+
+  /* PRD §35 — the submission tracker. Equally a KDP listing or an agent query;
+   * the fields that matter are the same either way. */
+  submission: (f = {}) => base('submission', {
+    projectId: null,
+    bookId: null,
+    pathway: 'traditional',
+    target: '',             // agent, publisher, platform
+    contact: '',
+    sentOn: '',
+    status: 'planned',      // planned | sent | replied | offer | rejected | live
+    notes: '',
     ...f,
   }),
 

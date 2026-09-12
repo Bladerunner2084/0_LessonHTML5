@@ -21,6 +21,7 @@ export const SECTIONS = [
   { id: 'audit',       label: 'Continuity',     hint: 'Where the graph catches you lying.' },
   { id: 'decisions',   label: 'Decision Log',   hint: 'Locked author decisions. Authoritative.' },
   { id: 'inbox',       label: 'Questions & Ideas', hint: 'Unanswered questions and raw ideas.' },
+  { id: 'publish',     label: 'Publication',    hint: 'Traditional, self, or AI-assisted.' },
 ];
 
 export function renderTree() {
