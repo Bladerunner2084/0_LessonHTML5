@@ -21,6 +21,7 @@ import { renderPublish } from './views/publish.js';
 import { renderReader } from './views/reader.js';
 import { renderScreenplay } from './views/screenplay.js';
 import { renderStyle } from './views/style.js';
+import { renderSearch } from './views/search.js';
 import { logWords } from './pace.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
@@ -51,9 +52,23 @@ const el = {};
 function render() {
   clear(el.sidebar).append(renderTree());
   clear(el.header).append(renderHeader());
+  renderWorkspace();
 
+  document.title = S.get(S.ui.projectId)
+    ? `${S.get(S.ui.projectId).title} — Novel Development Platform`
+    : 'Novel Development Platform';
+}
+
+/* Painted on its own so the search box can update results on every keystroke
+ * without the header being rebuilt underneath the caret. */
+function renderWorkspace() {
   const bookId = S.ui.bookId;
   const renderView = VIEWS[S.ui.view] ?? VIEWS.dashboard;
+
+  if ((S.ui.query ?? '').trim()) {
+    clear(el.workspace).append(renderSearch());
+    return;
+  }
 
   clear(el.workspace).append(
     bookId
@@ -64,10 +79,6 @@ function render() {
           'Create a project on the left, or load the ECHO 2084 sample to see what the '
           + 'continuity engine does with a book that already contradicts itself.'),
         h('button', { class: 'btn btn-primary', onclick: loadSample }, 'Load ECHO 2084')));
-
-  document.title = S.get(S.ui.projectId)
-    ? `${S.get(S.ui.projectId).title} — Novel Development Platform`
-    : 'Novel Development Platform';
 }
 
 function renderHeader() {
@@ -88,6 +99,19 @@ function renderHeader() {
       section ? h('span', {}, section.label) : null),
 
     storage.warning ? h('span', { class: 'warn-banner' }, storage.warning) : null,
+
+    h('input', {
+      id: 'search-box',
+      class: 'search-box',
+      type: 'search',
+      placeholder: 'Search everything…  (Ctrl/Cmd + K)',
+      value: S.ui.query ?? '',
+      'aria-label': 'Search the project',
+      oninput: (e) => { S.ui.query = e.target.value; renderWorkspace(); },
+      onkeydown: (e) => {
+        if (e.key === 'Escape') { e.target.value = ''; S.ui.query = ''; renderWorkspace(); }
+      },
+    }),
 
     h('div', { class: 'header-actions' },
       h('button', { class: 'btn btn-small btn-ghost', onclick: loadSample }, 'Sample'),
@@ -140,6 +164,11 @@ async function loadSample() {
 function bindKeys() {
   window.addEventListener('keydown', (e) => {
     if (!(e.metaKey || e.ctrlKey)) return;
+    if (e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      document.getElementById('search-box')?.focus();
+      return;
+    }
     const index = '1234567890'.indexOf(e.key);
     if (index >= 0 && SECTIONS[index]) {
       e.preventDefault();

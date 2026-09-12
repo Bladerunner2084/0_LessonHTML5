@@ -714,3 +714,32 @@ textarea { resize: vertical; }
 .drift-list li.far { border-left-color: var(--bad); }
 .drift-list.all li { border-left-color: var(--line); color: var(--text-dim); font: 12px/1.6 var(--mono); }
 .drift-list.all li.off { border-left-color: var(--warn); color: var(--text); }
+
+/* ------------------------------------------------------- search & import */
+
+.search-box {
+  flex: 1 1 16rem; max-width: 26rem; min-width: 9rem;
+  background: var(--bg-sunken); font-size: 13px; padding: .3rem .6rem;
+}
+
+.results section h3 { margin: 1.2rem 0 .4rem; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.result-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
+.result {
+  display: grid; gap: .15rem; width: 100%; text-align: left; cursor: pointer;
+  background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: .5rem .7rem; color: var(--text); font: inherit;
+}
+.result:hover { border-color: var(--accent); }
+.result-head { display: flex; gap: .45rem; align-items: baseline; }
+.result-head .name { font-weight: 600; }
+.result-snippet { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; }
+.result-snippet mark { background: var(--accent-dim); color: var(--text); border-radius: 2px; padding: 0 .1em; }
+
+.import-card {
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: .9rem 1rem; margin: 1rem 1.25rem 0;
+}
+.import-card h3 { margin: 0 0 .2rem; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.import-file { margin: .6rem 0; font-size: 13px; }
+.import-report { margin: .5rem 0; font-size: 13.5px; }
+.import-preview { list-style: none; margin: .5rem 0; padding: 0; display: grid; gap: .1rem; font-size: 13px; }

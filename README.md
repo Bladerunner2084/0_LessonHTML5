@@ -59,7 +59,8 @@ node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace te
 node tests/reader.mjs           # 17 tests for the Reader Model
 node tests/script.mjs           # 21 tests for the screenplay converter
 node tests/voice.mjs            # 22 tests for the style engine
-node tests/browser.mjs          # 68 tests driving the real app in Chromium
+node tests/io.mjs               # 17 tests for import and search
+node tests/browser.mjs          # 78 tests driving the real app in Chromium
 node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
 
@@ -206,6 +207,32 @@ Three consequences worth stating plainly:
   engine report ghosts, which is worse than reporting nothing.
 - **Series-shared records carry `bookId: null`.** Three books, one character
   bible, zero copies. Edit the character once.
+
+## Getting a manuscript in, and finding things in it
+
+Until these two existed the application had never met a real book, and could not
+have: there was no way to load one, and at 90,000 words no way to find anything
+once it was there.
+
+**Import** (in the Draft Vault, per PRD Phase 1) reads Word `.docx`, plain text,
+Markdown and Fountain. The `.docx` parser is hand-rolled — the ZIP central
+directory is walked by hand and entries are inflated with the platform's own
+`DecompressionStream` — because `.docx` is the format writers actually have, and
+"please save as plain text first" is a support ticket rather than a feature.
+
+Chapters and scene breaks are **detected, shown, and only written once you
+agree**. The preview names the strategy it used (`Markdown headings`,
+`"Chapter One" style headings`, bare numbers, capitalised lines) and three
+headings are required before a pattern counts as a structure — two is a
+coincidence. A snapshot is taken before anything is written either way.
+
+**Search** covers every record type: prose, summaries, bibles, beats,
+revelations, decisions, questions, ideas, the screenplay and style profiles.
+`Ctrl`/`Cmd` + `K`. All terms must appear — on a corpus this size an OR search
+returns the whole book. A name in the bible outranks a passing mention in prose,
+and every hit carries a snippet with the term marked. No index is maintained: the
+whole search runs in milliseconds, and a stale index is exactly the class of bug
+this application's architecture exists to avoid.
 
 ## Screenplay mode
 
@@ -380,6 +407,8 @@ assets/js/pace.js           deadlines, measured velocity, honest verdicts
 assets/js/reader.js         the Reader Model — recall decay, tension, cast load
 assets/js/script.js         prose to Fountain, Fountain to page, Final Draft export
 assets/js/voice.js          the Style Engine — measurement, blending, drift
+assets/js/import.js         .docx/.txt/.md/.fountain in, chapters and scenes out
+assets/js/search.js         cross-record search, ranked, no index
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
@@ -389,7 +418,8 @@ tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
 tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
 tests/script.mjs            21 screenplay conversion and export tests
 tests/voice.mjs             22 style measurement, blending and drift tests
-tests/browser.mjs           68 end-to-end tests against a real Chromium
+tests/io.mjs                17 import (including a real .docx) and search tests
+tests/browser.mjs           78 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
 build.mjs                   inlines the module graph into one distributable file
 landing/index.html          the sales page (the only thing GitHub Pages publishes)
@@ -408,7 +438,6 @@ toolchain, and this one should still open in a browser in 2035.
 Stated plainly, because a roadmap disguised as a feature list is how software
 lies:
 
-- **No full-text search.** With a 90k-word manuscript you will want it.
 - **Revision history is per-book, not per-scene.** The Draft Vault snapshots the
   whole book; there is no per-scene undo between snapshots.
 - **Story time is an ordered list, not a calendar.** `storyTime` is free text for

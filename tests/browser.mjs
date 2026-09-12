@@ -365,6 +365,61 @@ try {
   check('the mixer adds a weighted influence with a share',
     /%$/.test((await page.locator('.mix-share').first().textContent()) ?? ''));
 
+  /* Search: the thing whose absence proved the app had never met a manuscript. */
+  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.search-box').fill('Terminus');
+  await page.waitForTimeout(400);
+  check('searching replaces the workspace with results',
+    await page.locator('.result').count() >= 1);
+  check('a result carries a snippet with the term marked',
+    await page.locator('.result-snippet mark').count() >= 1);
+
+  /* Typing must not steal the caret — the header is not rebuilt per keystroke. */
+  check('the search box keeps focus while typing',
+    await page.evaluate(() => document.activeElement?.id === 'search-box'));
+
+  await page.locator('.result').first().click();
+  await page.waitForTimeout(400);
+  check('clicking a result navigates to it and clears the search',
+    (await page.locator('.search-box').inputValue()) === ''
+      && await page.locator('.result').count() === 0);
+
+  /* Import: a real file through the real picker. */
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('vault')).click();
+  await page.waitForTimeout(300);
+  const chaptersBefore = await page.evaluate(() =>
+    document.querySelectorAll('.card').length);
+
+  const manuscript = ['# Chapter One', '', 'First scene of the import.', '', '* * *', '',
+    'Second scene of the import.', '', '# Chapter Two', '', 'Only one scene here.', '',
+    '# Chapter Three', '', 'And one here.'].join('\n');
+  await page.locator('.import-file').setInputFiles({
+    name: 'manuscript.md', mimeType: 'text/markdown', buffer: Buffer.from(manuscript),
+  });
+  await page.waitForTimeout(600);
+  check('the importer previews what it found before writing anything',
+    /3 chapters/.test(await page.locator('.import-report').innerText()));
+  check('the importer names the strategy it used',
+    /Markdown headings/i.test(await page.locator('.import-report').innerText()));
+  check('nothing is written until the author agrees',
+    await page.evaluate(() => document.querySelectorAll('.card').length) === chaptersBefore);
+
+  await page.getByRole('button', { name: /Add 3 chapters/ }).click();
+  await page.waitForTimeout(900);
+  check('confirming the import creates the chapters',
+    await page.locator('.chapter-grid .card').count() >= 3);
+  check('imported scene breaks became separate scenes',
+    (await page.locator('.chapter-grid').innerText()).includes('First scene of the import'));
+
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('vault')).click();
+  await page.waitForTimeout(300);
+  /* Version labels live in input values, which text matching cannot see. */
+  const versionLabels = await page.locator('.version-card .title-input').evaluateAll(
+    (nodes) => nodes.map((n) => n.value));
+  check('importing snapshots the book first',
+    versionLabels.includes('Before import'), versionLabels.join(' | '));
+
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {
   await browser.close();

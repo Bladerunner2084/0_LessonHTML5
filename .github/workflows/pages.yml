@@ -39,6 +39,9 @@ jobs:
       - name: Style engine tests
         run: node tests/voice.mjs
 
+      - name: Import and search tests
+        run: node tests/io.mjs
+
       - name: Build the single-file distributable
         run: node build.mjs
 

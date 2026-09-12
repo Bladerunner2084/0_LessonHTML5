@@ -6,9 +6,10 @@
  * so there is no sequence of clicks that loses work you cannot get back.
  */
 
-import { h, field, debounce, confirmDanger } from '../dom.js';
+import { h, field, clear, debounce, confirmDanger } from '../dom.js';
 import * as S from '../state.js';
 import { download, slug } from '../compile.js';
+import { readManuscriptFile, detectStructure } from '../import.js';
 
 const save = debounce((id, fields) => S.patch(id, fields), 350);
 
@@ -28,6 +29,8 @@ export function renderVault(bookId) {
         h('span', { class: 'muted' }, `${current.toLocaleString()} words now`),
         h('button', { class: 'btn btn-small btn-primary', onclick: () => snapshot(bookId) },
           '+ Preserve this state'))),
+
+    importCard(bookId),
 
     h('div', { class: 'vault' }, versions.length
       ? versions.map((v, i) => versionCard(v, versions[i + 1], current, bookId))
@@ -87,6 +90,112 @@ function versionCard(version, older, currentWords, bookId) {
         window.alert(`Restored ${n} records from “${version.label}”.`);
       },
     }, 'Restore this version'));
+}
+
+/* PRD Phase 1: import the author's existing manuscript, destroying nothing.
+ * Detection is heuristic, so nothing is written until the author has seen what
+ * it found — a wrong split applied silently to 90,000 words is a bad afternoon. */
+function importCard(bookId) {
+  const report = h('div', { class: 'import-report' });
+  const actions = h('div', { class: 'chip-row' });
+  let pending = null;
+
+  const picker = h('input', {
+    type: 'file', accept: '.txt,.md,.markdown,.fountain,.docx', class: 'import-file',
+    onchange: async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      clear(actions);
+      clear(report).append(h('p', { class: 'sub' }, `Reading ${file.name}…`));
+      try {
+        const text = await readManuscriptFile(file);
+        pending = detectStructure(text);
+        showPreview(file.name);
+      } catch (err) {
+        pending = null;
+        clear(report).append(h('p', { class: 'empty' }, `Could not read that file. ${err.message}`));
+      }
+      e.target.value = '';
+    },
+  });
+
+  function showPreview(filename) {
+    if (!pending?.chapterCount) {
+      clear(report).append(h('p', { class: 'empty' }, 'No text found in that file.'));
+      return;
+    }
+    clear(report).append(
+      h('p', {},
+        h('strong', {}, filename), ' — ',
+        `${pending.words.toLocaleString()} words, split into `,
+        h('strong', {}, `${pending.chapterCount} chapters`), ' and ',
+        h('strong', {}, `${pending.sceneCount} scenes`), '.'),
+      h('p', { class: 'sub' }, `Detected using: ${pending.strategy}.`),
+      h('ul', { class: 'import-preview' },
+        pending.chapters.slice(0, 6).map((c) => h('li', {},
+          h('span', { class: 'name' }, c.title),
+          h('span', { class: 'muted small' }, ` — ${c.scenes.length} scene(s)`))),
+        pending.chapters.length > 6
+          ? h('li', { class: 'muted small' }, `…and ${pending.chapters.length - 6} more`)
+          : null),
+      h('p', { class: 'sub' },
+        'Wrong? Scene breaks are read from lines like * * * or ---, and chapters from '
+        + 'headings. Fix them in the source file and import again — nothing has been '
+        + 'written yet.'));
+
+    clear(actions).append(
+      h('button', {
+        class: 'btn btn-small btn-primary',
+        onclick: () => commit(),
+      }, `Add ${pending.chapterCount} chapters to this book`),
+      h('button', { class: 'chip', onclick: () => { pending = null; clear(report); clear(actions); } },
+        'Cancel'));
+  }
+
+  async function commit() {
+    const plan = pending;
+    if (!plan) return;
+    clear(actions).append(h('span', { class: 'muted' }, 'Importing…'));
+
+    /* Snapshot first, always. The import appends rather than replaces, but an
+     * author who imports the wrong file still needs one click back. */
+    await S.snapshotBook(bookId, {
+      label: 'Before import',
+      reason: `Automatic snapshot taken before importing ${plan.words.toLocaleString()} words.`,
+    });
+
+    const book = S.get(bookId);
+    let order = S.chapters(bookId).length;
+    for (const chapter of plan.chapters) {
+      const made = await S.create('chapter', {
+        projectId: book.projectId, bookId, title: chapter.title, order,
+      });
+      order += 1;
+      for (const [i, scene] of chapter.scenes.entries()) {
+        await S.create('scene', {
+          projectId: book.projectId,
+          bookId,
+          chapterId: made.id,
+          order: i,
+          title: scene.title,
+          prose: scene.prose,
+          status: 'drafted',
+        });
+      }
+    }
+    pending = null;
+    S.setUi({ view: 'chapters', selectionId: null });
+  }
+
+  return h('section', { class: 'import-card' },
+    h('h3', {}, 'Import an existing manuscript'),
+    h('p', { class: 'sub' },
+      'Word (.docx), plain text, Markdown or Fountain. Chapters and scene breaks are '
+      + 'detected, shown to you, and only written once you agree. A snapshot is taken '
+      + 'first either way.'),
+    picker,
+    report,
+    actions);
 }
 
 async function snapshot(bookId) {
