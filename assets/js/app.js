@@ -18,6 +18,7 @@ import { renderDashboard } from './views/dashboard.js';
 import { renderVault } from './views/vault.js';
 import { renderDecisions, renderInbox } from './views/authority.js';
 import { renderPublish } from './views/publish.js';
+import { renderReader } from './views/reader.js';
 import { logWords } from './pace.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
@@ -34,6 +35,7 @@ const VIEWS = {
   chapters: renderChapters,
   scenes: renderScenes,
   manuscript: renderManuscript,
+  reader: renderReader,
   audit: renderAudit,
   decisions: renderDecisions,
   inbox: renderInbox,

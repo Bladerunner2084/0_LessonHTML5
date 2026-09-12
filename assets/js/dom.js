@@ -28,6 +28,25 @@ function append(el, children) {
 
 export const frag = (...children) => append(document.createDocumentFragment(), children);
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/* SVG elements need their own namespace, and unlike HTML they take geometry
+ * through attributes rather than properties — so they get their own builder
+ * instead of special cases threaded through h(). */
+export function svg(tag, props = {}, ...children) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(props ?? {})) {
+    if (value == null || value === false) continue;
+    if (key.startsWith('on')) el.addEventListener(key.slice(2).toLowerCase(), value);
+    else el.setAttribute(key, value);
+  }
+  for (const child of children.flat(Infinity)) {
+    if (child == null || child === false) continue;
+    el.append(child);
+  }
+  return el;
+}
+
 export function clear(el) {
   while (el.firstChild) el.firstChild.remove();
   return el;

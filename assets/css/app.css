@@ -572,3 +572,72 @@ textarea { resize: vertical; }
 .sub-row.offer, .sub-row.live { border-left: 3px solid var(--accent); }
 .sub-row.rejected { border-left: 3px solid var(--bad); opacity: .72; }
 .sub-row.replied { border-left: 3px solid var(--warn); }
+
+/* -------------------------------------------------- reader simulator */
+
+/* Chart roles, defined once so light/dark swap in one place. The series hue and
+ * both surfaces were run through the palette validator; single series, so no
+ * legend box — the heading names it. */
+.chart-block {
+  --surface-1: var(--bg-raised);
+  --series-1: #2a78d6;
+  --status-good: #0ca30c;
+  --status-critical: #d03b3b;
+  --grid: rgba(0, 0, 0, .09);
+}
+@media (prefers-color-scheme: dark) {
+  .chart-block { --series-1: #3987e5; --grid: rgba(255, 255, 255, .08); }
+}
+
+.chart-block h3 { margin: 0 0 .5rem; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.chart-figure { margin: 0; }
+.chart-wrap { position: relative; background: var(--surface-1); border-radius: var(--radius); }
+.tension-chart { display: block; width: 100%; height: 150px; }
+
+.tension-chart .area { fill: var(--series-1); opacity: .14; stroke: none; }
+.tension-chart .line { fill: none; stroke: var(--series-1); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tension-chart .axis { stroke: var(--text-faint); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tension-chart .grid { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tension-chart .cursor { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.tension-chart .cursor-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; vector-effect: non-scaling-stroke; }
+/* A 2px surface ring keeps overlapping event marks from merging into a blob. */
+.tension-chart .ev { stroke: var(--surface-1); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.tension-chart .ev.open { fill: var(--status-critical); }
+.tension-chart .ev.close { fill: var(--status-good); }
+.tension-chart .hit { fill: transparent; cursor: pointer; }
+
+/* display:grid below would otherwise beat the user agent's [hidden] rule, so
+ * the tooltip has to opt back out explicitly. */
+.chart-tip[hidden] { display: none; }
+.chart-tip {
+  position: absolute; top: 4px; transform: translateX(-50%);
+  background: var(--bg-sunken); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: .3rem .55rem; font-size: 12px; pointer-events: none; white-space: nowrap;
+  display: grid; gap: .1rem; z-index: 2;
+}
+.ev-open { color: var(--status-critical, var(--bad)); }
+.ev-close { color: var(--status-good, var(--accent)); }
+
+.chart-figure figcaption {
+  display: flex; gap: 1.1rem; font-size: 11.5px; color: var(--text-dim); margin-top: .35rem;
+}
+.chart-caption { margin-top: .5rem; }
+.scrub { margin-top: .5rem; accent-color: var(--accent); padding: 0; }
+
+.reader-findings { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: .3rem; }
+.reader-findings li { border-left: 2px solid var(--warn); padding-left: .7rem; }
+.reader-findings li.info { border-left-color: var(--info); }
+
+.reader-columns {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1.4rem; margin-top: 1.6rem; align-items: start;
+}
+.reader-group h3 { margin: 0 0 .15rem; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.reader-list { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .3rem; }
+.reader-list li { display: flex; align-items: center; gap: .5rem; font-size: 13px; }
+.reader-list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.faint-row .name { color: var(--text-faint); }
+
+.recall { display: inline-block; width: 34px; height: 5px; border-radius: 3px; background: var(--line); flex: none; overflow: hidden; }
+.recall i { display: block; height: 100%; background: var(--accent); }
+.recall.faint i { background: var(--warn); }

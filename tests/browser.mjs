@@ -57,10 +57,11 @@ if (!pw) {
 }
 
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
-  'revelations', 'chapters', 'scenes', 'manuscript', 'audit', 'decisions', 'inbox', 'publish'];
+  'revelations', 'chapters', 'scenes', 'manuscript', 'reader', 'audit', 'decisions', 'inbox',
+  'publish'];
 const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
-  'Continuity', 'Decision Log', 'Questions & Ideas', 'Publication'];
+  'Reader Simulator', 'Continuity', 'Decision Log', 'Questions & Ideas', 'Publication'];
 
 const results = [];
 let passed = 0;
@@ -227,6 +228,46 @@ try {
   await page.waitForTimeout(400);
   check('the submission tracker records a query',
     await page.locator('.sub-row').count() === 1);
+
+  /* The Reader Simulator: the curve renders, and scrubbing changes the mind. */
+  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('reader')).click();
+  await page.waitForTimeout(350);
+  check('the tension curve renders as a real path, not a placeholder',
+    ((await page.locator('.tension-chart .line').getAttribute('d')) ?? '').length > 20);
+  check('every scene gets a hover target on the curve',
+    await page.locator('.tension-chart .hit').count() === 6);
+
+  const scrubTo = async (i) => {
+    await page.locator('.scrub').fill(String(i));
+    await page.dispatchEvent('.scrub', 'input');
+    await page.waitForTimeout(250);
+    return page.locator('.reader-columns').innerText();
+  };
+
+  const early = await scrubTo(0);
+  const late = await scrubTo(5);
+  check('scrubbing the book changes what the reader is holding', early !== late,
+    'the panel did not respond to the scrubber');
+
+  /* The specific transition the whole feature exists to show: a question the
+   * reader is carrying at scene 3 has become a thing they know by scene 6.
+   * Headings are uppercased in CSS and innerText returns rendered text, so
+   * these match case-insensitively. */
+  const mid = await scrubTo(2);
+  check('a planted-but-unrevealed fact sits in “still waiting on”',
+    /still waiting on · 1[\s\S]*Mara is an echo/i.test(mid), mid.slice(0, 120));
+  check('after its reveal the same fact has moved to “knows”',
+    /knows · 1[\s\S]*Mara is an echo/i.test(late) && /still waiting on · 0/i.test(late),
+    late.slice(0, 120));
+
+  check('the caption names the scene the reader has just finished',
+    (await page.locator('.chart-caption').textContent())?.includes('Scene 3 of 6'));
+  await page.locator('.tension-chart .hit').nth(2).hover();
+  await page.waitForTimeout(200);
+  check('hovering the curve explains the point',
+    await page.locator('.chart-tip:not([hidden])').count() === 1);
 
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {

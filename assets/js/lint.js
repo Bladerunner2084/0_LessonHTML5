@@ -12,6 +12,7 @@
 
 import * as S from './state.js';
 import { wordCount } from './model.js';
+import { readerFindings } from './reader.js';
 
 const DRAFTED = new Set(['drafted', 'revised', 'locked']);
 
@@ -70,6 +71,29 @@ export const RULES = {
   'chapter-word-drift': {
     severity: 'info',
     blurb: 'A fully drafted chapter far off its word target.',
+  },
+
+  /* --- from the Reader Model. These are the ones no other tool can produce,
+   * because they depend on modelling the reader rather than the book. */
+  'reader-forgot': {
+    severity: 'warn',
+    blurb: 'The scene needs a fact the reader was told too long ago to still hold.',
+  },
+  'tension-flatline': {
+    severity: 'warn',
+    blurb: 'A stretch where nothing opens and nothing resolves.',
+  },
+  'tension-deflation': {
+    severity: 'warn',
+    blurb: 'The reader runs out of open questions before the book runs out of pages.',
+  },
+  'character-faded': {
+    severity: 'warn',
+    blurb: 'Someone returns after long enough that the reader has lost them.',
+  },
+  'cast-overload': {
+    severity: 'info',
+    blurb: 'Too many new names introduced too close together.',
   },
 };
 
@@ -299,6 +323,10 @@ export function audit(bookId) {
         { recordId: ch.id, view: 'chapters', label: ch.title }));
     }
   }
+
+  /* The Reader Model runs over the same graph and returns findings in the same
+   * shape, so it simply joins the report. */
+  out.push(...readerFindings(bookId));
 
   return out.sort((a, b) =>
     SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.rule.localeCompare(b.rule));

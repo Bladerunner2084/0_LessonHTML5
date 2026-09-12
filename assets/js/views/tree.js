@@ -18,6 +18,7 @@ export const SECTIONS = [
   { id: 'chapters',    label: 'Chapter Map',    hint: 'Containers and pacing targets.' },
   { id: 'scenes',      label: 'Scene Map',      hint: 'The atomic unit. Prose lives here.' },
   { id: 'manuscript',  label: 'Manuscript',     hint: 'Compiled output. Read-only by design.' },
+  { id: 'reader',      label: 'Reader Simulator', hint: 'What the reader holds — and has forgotten.' },
   { id: 'audit',       label: 'Continuity',     hint: 'Where the graph catches you lying.' },
   { id: 'decisions',   label: 'Decision Log',   hint: 'Locked author decisions. Authoritative.' },
   { id: 'inbox',       label: 'Questions & Ideas', hint: 'Unanswered questions and raw ideas.' },

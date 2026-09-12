@@ -18,6 +18,7 @@ NOVEL DEVELOPMENT PLATFORM
 │   ├── Chapter Map        containers and pacing
 │   ├── Scene Map          the atomic unit — prose lives here
 │   ├── Manuscript         compiled output, read-only
+│   ├── Reader Simulator   what the reader holds — and has forgotten
 │   ├── Continuity         computed contradictions
 │   ├── Decision Log       locked author decisions, authoritative
 │   ├── Questions & Ideas  unanswered questions and raw, unfiled ideas
@@ -44,7 +45,8 @@ an S3 bucket, a Raspberry Pi on your desk.
 
 ```bash
 node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace tests
-node tests/browser.mjs          # 41 tests driving the real app in Chromium
+node tests/reader.mjs           # 17 tests for the Reader Model
+node tests/browser.mjs          # 49 tests driving the real app in Chromium
 ```
 
 The browser suite serves the repo on an ephemeral port and needs Playwright
@@ -174,6 +176,45 @@ Three consequences worth stating plainly:
 - **Series-shared records carry `bookId: null`.** Three books, one character
   bible, zero copies. Edit the character once.
 
+## The Reader Simulator
+
+**Every writing tool models the book. This one models the reader.**
+
+Scrivener models documents. Campfire models entities. All of them are author-side:
+they organise what *you* know. The graph here can compute something none of them
+can — what the reader knows at every point, and **how much of it they have
+forgotten.**
+
+That last clause is the whole idea. Every continuity system treats reader
+knowledge as permanent: revealed once, known forever. It is not. A fact stated
+once, forty scenes ago, with nothing since, is functionally unknown. Every author
+has had an editor say *"I didn't follow that"* and thought *"but I explained it in
+chapter four."* Both are true, and no tool has been able to show the author why.
+
+So recall decays. Each time a fact is touched — planted, revealed, or leaned on
+by a later scene — the reader's memory resets; between touches it fades with a
+half-life of 12 scenes. Everything else falls out of that one change:
+
+- **Tension** is the weight of the questions the reader is carrying, unanswered —
+  a number, per scene, which is why it can be drawn as a curve and pointed at.
+- **Fading** is what they were told and no longer hold.
+- **Cast load** is how many people they have been asked to keep straight.
+
+Five findings come out of it, and they join the Continuity report:
+
+| Rule | What it catches |
+|---|---|
+| `reader-forgot` | A scene needs a fact last mentioned 19+ scenes ago |
+| `tension-flatline` | Five or more scenes where nothing opens and nothing resolves |
+| `tension-deflation` | The reader runs out of questions before the book runs out of pages |
+| `character-faded` | Someone returns after long enough that the reader lost them |
+| `cast-overload` | Six new names inside three scenes |
+
+**None of this is AI.** It is arithmetic over records the author already keeps,
+so it runs offline, costs nothing per user, and cannot hallucinate. It is also
+the one part of this platform that no competitor can copy without first rebuilding
+their storage as a graph.
+
 ## Continuity: two orders that disagree
 
 Every book runs on two orders, and they are not the same order:
@@ -235,13 +276,15 @@ assets/js/state.js          in-memory index, selectors, mutators, cascades
 assets/js/lint.js           the continuity engine
 assets/js/pipeline.js       the 17-stage Controlled Rewrite, computed
 assets/js/pace.js           deadlines, measured velocity, honest verdicts
+assets/js/reader.js         the Reader Model — recall decay, tension, cast load
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
 assets/js/seed.js           the ECHO 2084 sample, faults included
 assets/js/views/*.js        one module per screen
 tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
-tests/browser.mjs           41 end-to-end tests against a real Chromium
+tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
+tests/browser.mjs           49 end-to-end tests against a real Chromium
 .github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
 

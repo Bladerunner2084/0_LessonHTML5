@@ -30,6 +30,9 @@ jobs:
       - name: Graph and continuity tests
         run: node tests/smoke.mjs
 
+      - name: Reader model tests
+        run: node tests/reader.mjs
+
       - name: Install Chromium for the browser tests
         run: |
           npm install --no-save playwright@^1.56.0
