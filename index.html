@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Novel Development Platform</title>
+  <meta name="description"
+        content="A graph-backed workspace for planning, drafting and continuity-checking novels and series.">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>✍</text></svg>">
+</head>
+<body>
+  <div class="shell">
+    <aside id="sidebar" class="sidebar"></aside>
+    <header id="header" class="header"></header>
+    <main id="workspace" class="workspace">
+      <p class="empty pad">Loading…</p>
+    </main>
+  </div>
+
+  <noscript>
+    <p class="empty pad">
+      This platform is a client-side application and needs JavaScript enabled.
+    </p>
+  </noscript>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
