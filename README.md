@@ -19,6 +19,7 @@ NOVEL DEVELOPMENT PLATFORM
 │   ├── Scene Map          the atomic unit — prose lives here
 │   ├── Manuscript         compiled output, read-only
 │   ├── Screenplay         converted from prose; the novel stays untouched
+│   ├── Style Studio       measured voice profiles, mixed and compared
 │   ├── Reader Simulator   what the reader holds — and has forgotten
 │   ├── Continuity         computed contradictions
 │   ├── Decision Log       locked author decisions, authoritative
@@ -57,7 +58,8 @@ The **built file has no such limitation** — that is the point of building it.
 node tests/smoke.mjs            # 36 graph, canon, version, pipeline and pace tests
 node tests/reader.mjs           # 17 tests for the Reader Model
 node tests/script.mjs           # 21 tests for the screenplay converter
-node tests/browser.mjs          # 60 tests driving the real app in Chromium
+node tests/voice.mjs            # 22 tests for the style engine
+node tests/browser.mjs          # 68 tests driving the real app in Chromium
 node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
 
@@ -233,6 +235,48 @@ guess.
 The byline is left blank. The platform does not know who wrote the book, and a
 guessed byline is how a draft goes out under the wrong name.
 
+## Style Studio
+
+PRD §13 is explicit: do not build "write like Author X", build an original author
+voice profile. This module takes that literally.
+
+**You never type a name.** You paste prose that sounds like what you are aiming
+at. The app measures sixteen countable things — sentence length and spread,
+dialogue ratio, vocabulary variety, adverb and filter-word rates, passive
+constructions, simile markers, punctuation fingerprint, sentence-opener
+variety — stores **only the numbers**, and discards the text.
+
+Three things follow from that one decision, and a test asserts each:
+
+- **Nothing copyrighted is retained.** Calibrate against a novel you own; the
+  application never holds one word of it.
+- **A profile is small and portable.** It travels in the JSON backup like any
+  other record.
+- **No genre norms are invented.** The six starter profiles ship with craft notes
+  and **no numbers**, because publishing "thrillers average 14.2 words per
+  sentence" would be fabricating research a writer has no way to check.
+
+**Profiles live in a library, not in a project** — `projectId` stays null — so the
+same voice can be aimed at a standalone novel, at book three of a series, and at
+a project that does not exist yet.
+
+### The Style Mixer
+
+Pull the target toward other measured profiles with weighted sliders. A weight is
+not a share of the prose; it is how hard each measured voice pulls on every
+number. Weights are relative and normalised, so 40 / 20 / 15 / 15 / 10 works
+without having to add up to anything.
+
+There is **no "generate rewrite" button**. Rewriting prose needs the AI layer
+this build does not have, and a button producing something else would be a lie.
+What the mixer produces is a measurable **target**, and a report of how far the
+actual draft sits from it:
+
+> *Words per sentence runs 34% longer than the target (21.4 against 16.0).*
+> *Filter words: 8.2/1k against a target of 3.1/1k — 165% higher.*
+
+That is the half that tells a writer what to do in the next paragraph.
+
 ## The Reader Simulator
 
 **Every writing tool models the book. This one models the reader.**
@@ -335,6 +379,7 @@ assets/js/pipeline.js       the 17-stage Controlled Rewrite, computed
 assets/js/pace.js           deadlines, measured velocity, honest verdicts
 assets/js/reader.js         the Reader Model — recall decay, tension, cast load
 assets/js/script.js         prose to Fountain, Fountain to page, Final Draft export
+assets/js/voice.js          the Style Engine — measurement, blending, drift
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
@@ -343,7 +388,8 @@ assets/js/views/*.js        one module per screen
 tests/smoke.mjs             36 graph, canon, version, pipeline and pace tests
 tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
 tests/script.mjs            21 screenplay conversion and export tests
-tests/browser.mjs           60 end-to-end tests against a real Chromium
+tests/voice.mjs             22 style measurement, blending and drift tests
+tests/browser.mjs           68 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
 build.mjs                   inlines the module graph into one distributable file
 landing/index.html          the sales page (the only thing GitHub Pages publishes)

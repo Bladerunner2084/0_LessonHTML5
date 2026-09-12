@@ -20,6 +20,7 @@ import { renderDecisions, renderInbox } from './views/authority.js';
 import { renderPublish } from './views/publish.js';
 import { renderReader } from './views/reader.js';
 import { renderScreenplay } from './views/screenplay.js';
+import { renderStyle } from './views/style.js';
 import { logWords } from './pace.js';
 import { seedPlatform } from './seed.js';
 import { download, slug } from './compile.js';
@@ -37,6 +38,7 @@ const VIEWS = {
   scenes: renderScenes,
   manuscript: renderManuscript,
   screenplay: renderScreenplay,
+  style: renderStyle,
   reader: renderReader,
   audit: renderAudit,
   decisions: renderDecisions,

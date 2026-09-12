@@ -18,6 +18,7 @@
 export const RECORD_TYPES = [
   'project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene', 'note',
   'decision', 'question', 'idea', 'version', 'wordlog', 'submission', 'script',
+  'styleprofile',
 ];
 
 /* PRD §35/§36 — the three routes out of a finished manuscript. The platform
@@ -141,6 +142,7 @@ export const make = {
     deadlineOn: false,
     deadline: '',           // 'YYYY-MM-DD'
     writingDays: 7,         // days per week the author actually writes
+    styleProfileId: null,   // the voice this book is aiming at
     pathway: null,          // see PATHWAYS — chosen in Publication Mode
     pubChecks: {},          // checklist key -> true
     published: false,
@@ -296,6 +298,25 @@ export const make = {
     body: '',
     generatedAt: '',        // when it was last regenerated from prose
     editedSince: false,     // has a human touched it since generation
+    ...f,
+  }),
+
+  /* A style profile lives in the LIBRARY, not in a project: projectId stays
+   * null so the same voice can be aimed at a standalone novel, book three of a
+   * series, and a project that does not exist yet. That is the reusability
+   * requirement, expressed as a field rather than a promise.
+   *
+   * Two kinds. A measured profile carries `metrics` taken from a prose sample.
+   * A mixed profile carries `mix` — weighted references to other profiles — and
+   * computes its metrics from them, so moving a slider re-aims the target. */
+  styleprofile: (f = {}) => base('styleprofile', {
+    projectId: null,
+    name: 'Untitled profile',
+    note: '',
+    metrics: null,          // measured, or null for a pure mix
+    mix: [],                // [{ profileId, weight }]
+    sampleWords: 0,         // how much prose it was measured from
+    measuredAt: '',
     ...f,
   }),
 

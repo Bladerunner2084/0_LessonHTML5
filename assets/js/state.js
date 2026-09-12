@@ -84,6 +84,10 @@ export const entities = (bookId, kind = null) => {
 export const beats = (bookId) => sortByOrder(inBook('beat', bookId));
 export const revelations = (bookId) => inBook('revelation', bookId);
 export const decisions = (bookId) => inBook('decision', bookId);
+
+/* Style profiles are library-wide by design, not per project. */
+export const styleProfiles = () =>
+  list('styleprofile').sort((a, b) => a.name.localeCompare(b.name));
 export const questions = (bookId) => inBook('question', bookId);
 export const ideas = (bookId) => inBook('idea', bookId);
 

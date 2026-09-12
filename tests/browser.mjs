@@ -57,12 +57,12 @@ if (!pw) {
 }
 
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
-  'revelations', 'chapters', 'scenes', 'manuscript', 'screenplay', 'reader', 'audit',
+  'revelations', 'chapters', 'scenes', 'manuscript', 'screenplay', 'style', 'reader', 'audit',
   'decisions', 'inbox', 'publish'];
 const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
-  'Screenplay', 'Reader Simulator', 'Continuity', 'Decision Log', 'Questions & Ideas',
-  'Publication'];
+  'Screenplay', 'Style Studio', 'Reader Simulator', 'Continuity', 'Decision Log',
+  'Questions & Ideas', 'Publication'];
 
 const results = [];
 let passed = 0;
@@ -320,6 +320,50 @@ try {
   await page.waitForTimeout(250);
   check('converting and editing the screenplay left the novel untouched',
     (await page.locator('.prose-area').inputValue()) === novelBefore);
+
+  /* Style Studio: profiles are measured, never named after an author, and the
+   * sample text must not survive the measurement. */
+  await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('style')).click();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: 'Create my library' }).click();
+  await page.waitForTimeout(500);
+  check('the starter library is created with six profiles',
+    await page.locator('.list .list-item').count() === 6);
+  check('starter profiles ship with no measurements',
+    await page.locator('.list .badge', { hasText: 'empty' }).count() === 6);
+
+  const sample = ('The committee had considered the question at length, and had arrived, '
+    + 'after some difficulty, at a conclusion that satisfied nobody. Rain fell. He waited. ')
+    .repeat(30);
+  await page.locator('.sample-area').fill(sample);
+  await page.getByRole('button', { name: 'Measure and discard' }).click();
+  await page.waitForTimeout(600);
+  check('measuring a sample produces the metric grid',
+    await page.locator('.metric').count() >= 12);
+  check('the sample box is cleared once measured',
+    (await page.locator('.sample-area').inputValue()) === '');
+  check('the page states the sample was discarded',
+    /discarded/i.test(await page.locator('.sample-box').innerText()));
+
+  /* The clinching check: no word of the sample survives anywhere in storage. */
+  const leaked = await page.evaluate(async () => {
+    const open = indexedDB.open('novel-platform');
+    const db = await new Promise((res, rej) => {
+      open.onsuccess = () => res(open.result); open.onerror = () => rej(open.error);
+    });
+    const rows = await new Promise((res, rej) => {
+      const req = db.transaction('records').objectStore('records').getAll();
+      req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+    });
+    return JSON.stringify(rows.filter((r) => r.type === 'styleprofile')).includes('committee');
+  });
+  check('no word of the measured sample is stored', leaked === false,
+    'sample prose survived into the database');
+
+  await page.locator('.mixer').getByRole('button', { name: '+ Add influence' }).click();
+  await page.waitForTimeout(400);
+  check('the mixer adds a weighted influence with a share',
+    /%$/.test((await page.locator('.mix-share').first().textContent()) ?? ''));
 
   check('no view writes errors to the console', noise.length === 0, noise.join('\n       '));
 } finally {

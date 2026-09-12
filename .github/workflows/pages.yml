@@ -36,6 +36,9 @@ jobs:
       - name: Screenplay converter tests
         run: node tests/script.mjs
 
+      - name: Style engine tests
+        run: node tests/voice.mjs
+
       - name: Build the single-file distributable
         run: node build.mjs
 
