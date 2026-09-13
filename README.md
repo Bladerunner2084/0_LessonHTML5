@@ -63,6 +63,7 @@ node tests/script.mjs           # 21 tests for the screenplay converter
 node tests/voice.mjs            # 22 tests for the style engine
 node tests/io.mjs               # 17 tests for import and search
 node tests/landing.mjs          # 23 tests for the marketing site
+node tests/api.mjs              # 14 tests pinning the front-end contract
 node tests/browser.mjs          # 78 tests driving the real app in Chromium
 node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
@@ -412,6 +413,7 @@ assets/js/script.js         prose to Fountain, Fountain to page, Final Draft exp
 assets/js/voice.js          the Style Engine — measurement, blending, drift
 assets/js/import.js         .docx/.txt/.md/.fountain in, chapters and scenes out
 assets/js/search.js         cross-record search, ranked, no index
+assets/js/api.js            one import surface for any front end
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
@@ -423,6 +425,8 @@ tests/script.mjs            21 screenplay conversion and export tests
 tests/voice.mjs             22 style measurement, blending and drift tests
 tests/io.mjs                17 import (including a real .docx) and search tests
 tests/landing.mjs           23 marketing-site tests, honesty rules included
+tests/api.mjs               14 front-end contract tests
+frontend/                   React binding, TypeScript types, a worked component
 tests/browser.mjs           78 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
 build.mjs                   inlines the module graph into one distributable file
@@ -474,6 +478,31 @@ consequences worth stating so they do not get designed away later:
 A serious writer's objection to most of this category is that it is a hobby toy
 with a subscription. The way not to be that is to be *diagnostic* — to tell the
 author something true they could not otherwise see.
+
+## Using the engine from another front end
+
+A React prototype exists (Figma Make). It is well designed and contains no
+logic — every finding in it is a literal. `assets/js/api.js` is the seam that
+makes connection cheaper than reimplementation:
+
+```tsx
+const w = useWriteline();
+const findings = w.findings();   // computed on every render, never cached
+```
+
+Everything that does real work here — `lint`, `reader`, `voice`, `pipeline`,
+`pace`, `script`, `import`, `search` — is pure functions over records with no
+DOM in it, so it ports to any framework unchanged, tests included.
+
+`frontend/` carries the TypeScript declarations, a twenty-line React binding
+via `useSyncExternalStore`, and the prototype's own `Audits.tsx` rewired to real
+data with every style left exactly as it was — the diff is the data source and
+nothing else. `frontend/README.md` maps each prototype view to its engine call.
+
+**The rule the seam exists to enforce:** a component renders findings, it never
+computes them. The moment a `.tsx` file hand-writes a continuity check, the logic
+exists twice, the two drift, and the product is back to the failure this
+architecture was built to prevent.
 
 ## The marketing site
 
