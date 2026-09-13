@@ -3,215 +3,741 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Writeline — Your reader’s line through the book.</title>
-<meta name="description" content="A writing tool that models the reader, not just the book. Finds the facts your reader has forgotten, the questions they are carrying, and the contradictions in your manuscript. One file. No account. Works offline.">
+<title>Writeline — your writing, the reader's line</title>
+<meta name="description" content="Writeline is a story development environment for novelists and series authors. Build the story bible, map revelations, audit continuity, and see what your reader actually remembers. Not an AI text generator.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>✍</text></svg>">
 <style>
-  :root{
-    color-scheme:dark light;
-    --bg:#0d1013;--raised:#141a1f;--line:#232c34;--soft:#1a2128;
-    --text:#dfe6ec;--dim:#8b99a6;--faint:#5e6b77;--accent:#4fd1a5;--bad:#ff6b6b;--warn:#f5b955;
-    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  @media (prefers-color-scheme:light){
-    :root{--bg:#f7f8f9;--raised:#fff;--line:#d6dadd;--soft:#eceef0;
-      --text:#1a1f24;--dim:#5b6670;--faint:#8a949d;--accent:#0f7a5c}
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--sans);
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:56rem;margin:0 auto;padding:0 1.25rem}
-  a{color:inherit}
+/* Same tokens as the application (assets/css/app.css) so crossing from the site
+   into the product does not feel like a seam. */
+:root{
+  color-scheme:dark light;
+  --bg:#0d1013;--raised:#141a1f;--sunken:#090b0d;--line:#232c34;--soft:#1a2128;
+  --text:#dfe6ec;--dim:#8b99a6;--faint:#5e6b77;
+  --accent:#4fd1a5;--accent-dim:#1e6b55;--bad:#ff6b6b;--warn:#f5b955;--info:#6aa9ff;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:Iowan Old Style,Palatino,Georgia,serif;
+  --gutter:1.25rem;--radius:8px;
+}
+@media (prefers-color-scheme:light){
+  :root{--bg:#f7f8f9;--raised:#fff;--sunken:#eceef0;--line:#d6dadd;--soft:#e9ecee;
+    --text:#161b20;--dim:#55606a;--faint:#8a949d;--accent:#0f7a5c;--accent-dim:#bfe8da}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:4.5rem}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:68rem;margin:0 auto;padding-inline:var(--gutter)}
+.narrow{max-width:52rem}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{letter-spacing:-.02em;margin:0}
+p{margin:0 0 1rem}
+.dim{color:var(--dim)}
+.small{font-size:13.5px}
+.kicker{font:11px/1.6 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 .9rem}
 
-  header{padding-block:4.5rem 3rem;border-bottom:1px solid var(--line)}
-  .kicker{font:11px/1.6 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 1rem}
-  h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.12;margin:0 0 1.1rem;letter-spacing:-.02em}
-  .lede{font-size:1.15rem;color:var(--dim);max-width:44ch;margin:0 0 2rem}
-  .cta{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
-  .btn{display:inline-block;background:var(--accent);color:#06120e;border:0;border-radius:6px;
-    padding:.75rem 1.4rem;font:600 15px/1 var(--sans);text-decoration:none}
-  .btn.ghost{background:none;color:var(--text);border:1px solid var(--line)}
-  .price{font:13px/1.5 var(--mono);color:var(--dim)}
+/* ---- nav ---- */
+nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-inner{display:flex;align-items:center;gap:1.5rem;height:4rem}
+.logo{font:600 17px/1 var(--sans);letter-spacing:-.03em}
+.logo b{color:var(--accent);font-weight:600}
+.nav-links{display:flex;gap:1.4rem;margin-left:1rem;font-size:14.5px}
+.nav-links a:hover{color:var(--accent)}
+.nav-actions{margin-left:auto;display:flex;gap:.6rem;align-items:center}
+.nav-toggle{display:none;margin-left:auto;background:none;border:1px solid var(--line);
+  border-radius:6px;color:var(--text);font-size:18px;padding:.15rem .55rem;cursor:pointer}
 
-  section{padding-block:3.25rem;border-bottom:1px solid var(--line)}
-  h2{font-size:1.35rem;margin:0 0 .5rem;letter-spacing:-.01em}
-  h3{font-size:1rem;margin:0 0 .3rem}
-  p{margin:0 0 1rem;max-width:62ch}
-  .dim{color:var(--dim)}
+.btn{display:inline-block;border-radius:6px;padding:.6rem 1.15rem;font:600 14.5px/1 var(--sans);
+  cursor:pointer;border:1px solid transparent;background:var(--accent);color:#06120e}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:none;border-color:var(--line);color:var(--text)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn.sm{padding:.42rem .85rem;font-size:13.5px}
 
-  .quote{border-left:2px solid var(--warn);padding:.4rem 0 .4rem 1rem;margin:1.5rem 0;
-    color:var(--warn);font:italic 15px/1.6 var(--sans);max-width:60ch}
+/* ---- hero ---- */
+header.hero{padding-block:5rem 3.5rem}
+h1{font-size:clamp(2.1rem,5.2vw,3.5rem);line-height:1.08}
+h1 .quiet{color:var(--dim)}
+.hero-sub{font-size:1.2rem;color:var(--text);max-width:34ch;margin:1.1rem 0 .6rem}
+.hero-copy{color:var(--dim);max-width:52ch}
+.cta-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.8rem;align-items:center}
+.cta-note{font-size:13px;color:var(--faint)}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:1.1rem;margin-top:1.6rem}
-  .card{background:var(--raised);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem}
-  .card p{font-size:14.5px;color:var(--dim);margin:0}
-  .card .tag{font:10px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:.35rem}
+/* ---- hero visual: the workspace, abstracted ---- */
+.hero-vis{margin-top:3rem;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--raised);overflow:hidden}
+.hv-bar{display:flex;gap:.4rem;align-items:center;padding:.5rem .8rem;border-bottom:1px solid var(--line);
+  background:var(--sunken)}
+.hv-dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.hv-title{font:11px/1.6 var(--mono);color:var(--faint);margin-left:.5rem}
+.hv-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:0}
+.hv-side{border-right:1px solid var(--line);padding:.8rem .9rem;display:grid;gap:.3rem;align-content:start}
+.hv-row{display:flex;align-items:center;gap:.5rem;font-size:13px;color:var(--dim)}
+.hv-row.on{color:var(--accent)}
+.hv-row .pill{margin-left:auto;font:10px/1.5 var(--mono);border-radius:9px;padding:0 .4em;
+  background:var(--bad);color:#fff}
+.hv-main{padding:1rem 1.1rem;display:grid;gap:.8rem;align-content:start}
+.hv-h{font:10px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.hv-card{border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem;font-size:13px}
+.hv-card b{display:block;font-weight:600;margin-bottom:.1rem}
+.spark{display:flex;align-items:flex-end;gap:3px;height:44px}
+.spark i{flex:1;background:var(--accent);opacity:.75;border-radius:2px 2px 0 0;display:block}
 
-  .rows{list-style:none;margin:1.2rem 0 0;padding:0;display:grid;gap:.55rem}
-  .rows li{display:flex;gap:.7rem;align-items:flex-start;font-size:15px}
-  .rows .mark{color:var(--accent);flex:none;font:13px/1.7 var(--mono)}
-  .rows .no{color:var(--faint)}
+/* ---- sections ---- */
+section{padding-block:4rem;border-top:1px solid var(--line)}
+h2{font-size:clamp(1.5rem,3vw,2.05rem);margin-bottom:.7rem}
+.lede{color:var(--dim);max-width:56ch;font-size:1.02rem}
 
-  .honest{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.3rem}
-  .honest h3{color:var(--warn)}
+/* ---- comparison ---- */
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:2rem}
+.col{border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.2rem;background:var(--raised)}
+.col.them{opacity:.72}
+.col h3{font-size:.95rem;margin-bottom:.8rem;color:var(--dim)}
+.col.us h3{color:var(--accent)}
+.col ul{list-style:none;margin:0;padding:0;display:grid;gap:.4rem;font-size:14.5px}
+.col li::before{content:"—  ";color:var(--faint)}
+.col.us li::before{content:"✓  ";color:var(--accent)}
+.punch{margin-top:2rem;font:600 clamp(1.15rem,2.4vw,1.5rem)/1.3 var(--sans);max-width:26ch}
 
-  footer{padding-block:2.5rem 4rem;color:var(--faint);font-size:13.5px}
-  footer p{max-width:60ch}
+/* ---- the line: seven steps ---- */
+.steps{position:relative;margin-top:2.4rem;display:grid;gap:0}
+.steps::before{content:"";position:absolute;left:1.05rem;top:.6rem;bottom:.6rem;width:2px;
+  background:linear-gradient(var(--accent),var(--accent-dim))}
+.step{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:1rem;padding:.75rem 0}
+.step .no{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--bg);border:2px solid var(--accent);
+  display:grid;place-items:center;font:11px/1 var(--mono);color:var(--accent);position:relative;z-index:1}
+.step h3{font-size:1rem;margin-bottom:.15rem}
+.step p{margin:0;color:var(--dim);font-size:14.5px}
+
+/* ---- interactive demo ---- */
+.demo{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--raised);margin-top:2rem}
+.demo-tabs{display:flex;flex-wrap:wrap;gap:.25rem;padding:.55rem;border-bottom:1px solid var(--line);background:var(--sunken)}
+.demo-tab{background:none;border:1px solid transparent;border-radius:5px;color:var(--dim);
+  font:13px/1 var(--sans);padding:.45rem .8rem;cursor:pointer}
+.demo-tab:hover{color:var(--text)}
+.demo-tab[aria-selected="true"]{background:var(--bg);border-color:var(--line);color:var(--accent)}
+.demo-panel{padding:1.3rem 1.4rem;min-height:16rem}
+.demo-panel h3{font-size:1.05rem;margin-bottom:.15rem}
+.demo-meta{font:11px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:1rem}
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.6rem}
+.kv{border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem}
+.kv b{display:block;font:10px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.kv span{font-size:14px}
+.chain{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;font-size:13.5px}
+.chain .node{border:1px solid var(--line);border-radius:5px;padding:.35rem .6rem;background:var(--bg)}
+.chain .arr{color:var(--faint)}
+.finding{display:flex;gap:.6rem;align-items:flex-start;border-left:2px solid var(--bad);
+  padding:.15rem 0 .15rem .7rem;margin-bottom:.5rem;font-size:14px}
+.finding.warn{border-left-color:var(--warn)}
+.finding .tag{font:10px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  flex:none;padding-top:.2rem;width:6.5rem}
+
+/* ---- canon ---- */
+.canon{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin-top:1.6rem}
+.canon div{border:1px solid var(--line);border-left-width:3px;border-radius:6px;padding:.7rem .8rem}
+.canon b{display:block;font-size:14px}
+.canon span{font-size:13px;color:var(--dim)}
+.c1{border-left-color:var(--accent)}.c2{border-left-color:var(--warn)}
+.c3{border-left-color:var(--info)}.c4{border-left-color:var(--bad)}
+
+/* ---- mixer ---- */
+.mix{border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.2rem;background:var(--raised);margin-top:1.6rem}
+.mix-row{display:grid;grid-template-columns:minmax(9rem,1.2fr) minmax(0,2fr) 3rem;gap:.8rem;align-items:center;
+  padding:.32rem 0;font-size:14px}
+.bar{height:7px;border-radius:4px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.mix-row .pc{font:12px/1 var(--mono);color:var(--dim);text-align:right}
+
+/* ---- cards ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.9rem;margin-top:2rem}
+.card{border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.1rem;background:var(--raised)}
+.card h3{font-size:.98rem;margin-bottom:.3rem}
+.card p{margin:0;font-size:14px;color:var(--dim)}
+.tag-planned{display:inline-block;font:9.5px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--warn);border:1px solid var(--warn);border-radius:9px;padding:0 .45em;margin-left:.4rem;vertical-align:1px}
+
+/* ---- pricing ---- */
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:.2rem;margin:1.4rem 0 .4rem;background:var(--raised)}
+.toggle button{background:none;border:0;border-radius:999px;color:var(--dim);font:13.5px/1 var(--sans);
+  padding:.45rem 1rem;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--accent-dim);color:var(--text)}
+.save{font-size:13px;color:var(--accent);margin-left:.6rem}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:.9rem;margin-top:1.4rem;align-items:start}
+.plan{border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.15rem;background:var(--raised);
+  display:flex;flex-direction:column;gap:.6rem;position:relative}
+.plan.popular{border-color:var(--accent)}
+.plan .flag{position:absolute;top:-.7rem;left:1rem;background:var(--accent);color:#06120e;
+  font:9.5px/1.7 var(--mono);letter-spacing:.12em;text-transform:uppercase;border-radius:9px;padding:0 .55em}
+.plan h3{font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.price{font:600 2rem/1 var(--sans)}
+.price small{font-size:.8rem;font-weight:400;color:var(--dim)}
+.plan .for{font-size:13.5px;color:var(--dim);min-height:2.4em}
+.plan ul{list-style:none;margin:.2rem 0 0;padding:0;display:grid;gap:.28rem;font-size:13.5px;flex:1}
+.plan li::before{content:"✓ ";color:var(--accent)}
+.plan li.soon{color:var(--dim)}
+.plan li.soon::before{content:"◌ ";color:var(--warn)}
+
+/* ---- table ---- */
+.tablewrap{overflow-x:auto;margin-top:1.4rem;border:1px solid var(--line);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;min-width:36rem;font-size:13.5px}
+th,td{padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--line)}
+thead th{background:var(--sunken);font:11px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+tbody td:not(:first-child){text-align:center;color:var(--dim)}
+tbody tr:last-child td{border-bottom:0}
+.yes{color:var(--accent)}
+
+/* ---- faq ---- */
+.faq{margin-top:1.6rem;display:grid;gap:.1rem;max-width:52rem}
+details{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;padding:.85rem 0;font-size:15px;font-weight:600;list-style:none;display:flex;gap:.7rem}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--accent);width:1rem;flex:none}
+details[open] summary::before{content:"–"}
+details p{margin:0 0 1rem 1.7rem;color:var(--dim);font-size:14.5px;max-width:60ch}
+
+/* ---- closing ---- */
+.close{text-align:center;padding-block:5rem}
+.close h2{font-size:clamp(1.7rem,4vw,2.6rem)}
+.close .cta-row{justify-content:center}
+footer{border-top:1px solid var(--line);padding-block:2.5rem 4rem;color:var(--faint);font-size:13.5px}
+.foot-line{display:flex;gap:1rem;flex-wrap:wrap;align-items:baseline}
+.foot-line .logo{font-size:15px}
+
+@media (max-width:820px){
+  .nav-links{display:none;position:absolute;top:4rem;left:0;right:0;background:var(--raised);
+    border-bottom:1px solid var(--line);flex-direction:column;gap:0;padding:.5rem var(--gutter) 1rem;margin:0}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:.6rem 0;border-bottom:1px solid var(--line)}
+  .nav-toggle{display:block}
+  .nav-actions{margin-left:.5rem}
+  .nav-actions .btn.ghost{display:none}
+  .hv-body{grid-template-columns:1fr}
+  .hv-side{border-right:0;border-bottom:1px solid var(--line)}
+  .mix-row{grid-template-columns:minmax(7rem,1fr) minmax(0,1.4fr) 2.6rem}
+}
 </style>
 </head>
 <body>
 
-<header>
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top">Write<b>line</b></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false">≡</button>
+    <div class="nav-links" id="navLinks">
+      <a href="#different">Product</a>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#series">For series</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn ghost sm" href="#how">See how it works</a>
+      <a class="btn sm" href="#pricing">Start writing free</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
   <div class="wrap">
-    <p class="kicker">Writeline — Your reader’s line through the book.</p>
-    <h1>Your reader forgot what you told them in chapter four.</h1>
-    <p class="lede">
-      Every writing tool organises what <em>you</em> know. This one works out what your
-      <em>reader</em> still remembers — and tells you when a scene is leaning on something
-      they lost two hundred pages ago.
+    <p class="kicker">Writeline</p>
+    <h1>Your writing.<br><span class="quiet">The reader's line.</span></h1>
+    <p class="hero-sub">Build better stories, from first idea to finished manuscript.</p>
+    <p class="hero-copy">
+      Writeline is a story development environment for novelists and series authors. Develop
+      characters, worlds, timelines, scenes, revelations and revisions — and keep the story
+      coherent while you do it.
     </p>
-    <div class="cta">
-      <!-- Replace with your Gumroad / Payhip / Lemon Squeezy checkout link. -->
-      <a class="btn" href="#buy">Buy — one file, yours forever</a>
-      <a class="btn ghost" href="#what">See what it does</a>
+    <div class="cta-row">
+      <a class="btn" href="#pricing">Start writing free</a>
+      <a class="btn ghost" href="#demo">Explore Writeline</a>
+      <span class="cta-note">No account required to start. Your writing stays on your machine.</span>
+    </div>
+
+    <div class="hero-vis" aria-hidden="true">
+      <div class="hv-bar">
+        <span class="hv-dot"></span><span class="hv-dot"></span><span class="hv-dot"></span>
+        <span class="hv-title">ECHO 2084 — one story, every system</span>
+      </div>
+      <div class="hv-body">
+        <div class="hv-side">
+          <div class="hv-row">◈ Story Bible</div>
+          <div class="hv-row">◉ Character Bible</div>
+          <div class="hv-row">⬢ World Bible</div>
+          <div class="hv-row">◆ Timeline</div>
+          <div class="hv-row">▤ Revelation Map</div>
+          <div class="hv-row on">↗ Reader Simulator</div>
+          <div class="hv-row">⚑ Continuity <span class="pill">4</span></div>
+          <div class="hv-row">▦ Manuscript</div>
+        </div>
+        <div class="hv-main">
+          <div>
+            <div class="hv-h">Open questions the reader is carrying</div>
+            <div class="spark">
+              <i style="height:14%"></i><i style="height:30%"></i><i style="height:52%"></i>
+              <i style="height:66%"></i><i style="height:58%"></i><i style="height:74%"></i>
+              <i style="height:88%"></i><i style="height:70%"></i><i style="height:46%"></i>
+              <i style="height:30%"></i><i style="height:18%"></i><i style="height:8%"></i>
+            </div>
+          </div>
+          <div class="hv-card">
+            <b>Continuity · contradiction</b>
+            Scene 38 relies on “the fire”, last mentioned 23 scenes earlier.
+            At that distance the reader no longer has it.
+          </div>
+          <div class="hv-card">
+            <b>Story health</b>
+            61% of target · 2 contradictions · 3 risks · 11 open questions
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
-<section id="what">
+<section id="different">
   <div class="wrap">
-    <h2>The problem nothing else catches</h2>
-    <p>
-      You establish something important early. Two hundred pages later you write a scene
-      that only works if the reader is still holding it. To you it is obvious — you wrote it,
-      you have reread it forty times. To them it was a single sentence, a long time ago.
+    <h2>More than an AI writing tool.</h2>
+    <p class="lede">
+      Writeline doesn't exist to generate endless pages of text. It helps you understand,
+      build, test, write and revise the story behind those pages.
     </p>
-    <p>Your editor comes back with:</p>
-    <div class="quote">“I didn’t follow that scene.”</div>
-    <p>And you think: <em>but I explained it in chapter four.</em> You are both right.</p>
-    <p class="dim">
-      Every other continuity tool treats reader knowledge as permanent — revealed once,
-      known forever. Readers do not work that way. This one models forgetting.
-    </p>
+    <div class="compare">
+      <div class="col them">
+        <h3>A typical AI writing tool</h3>
+        <ul>
+          <li>Generate text</li><li>Rewrite a paragraph</li>
+          <li>Continue writing</li><li>Chat with an AI</li>
+        </ul>
+      </div>
+      <div class="col us">
+        <h3>Writeline</h3>
+        <ul>
+          <li>Build the story bible</li><li>Track characters and what they know</li>
+          <li>Manage world rules</li><li>Control when the reader learns things</li>
+          <li>Map the timeline against reading order</li><li>Architect scenes before drafting</li>
+          <li>Audit continuity, automatically</li><li>Model what the reader has forgotten</li>
+          <li>Measure your own voice, and drift from it</li><li>Revise under control</li>
+          <li>Maintain canon</li><li>Develop entire series</li>
+        </ul>
+      </div>
+    </div>
+    <p class="punch">Don't just generate words. Build the story.</p>
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <h2>What it tells you</h2>
-    <div class="grid">
-      <div class="card">
-        <span class="tag">Reader simulator</span>
-        <h3>What they’re holding, scene by scene</h3>
-        <p>Drag through the book and see what the reader knows, what they are still waiting
-          on, what they believe that is wrong, and what has faded.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Tension curve</span>
-        <h3>Where the book sags</h3>
-        <p>The weight of unanswered questions, computed per scene. Writers feel the sag.
-          This points at the scene.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Continuity engine</span>
-        <h3>Twenty-one checks, always current</h3>
-        <p>Characters on the page after they die. Reveals the reader has not reached yet.
-          Setups you never paid off. Chronology running backwards.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Screenplay</span>
-        <h3>Convert without risking the novel</h3>
-        <p>Fountain format, opens in Final Draft. Your prose is never modified, and every
-          judgement the converter refuses to make is left as a note you can find.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Draft vault</span>
-        <h3>Nothing is ever destroyed</h3>
-        <p>Snapshot the whole book before a rewrite pass. Restoring one snapshots the
-          present first, so no click loses work you cannot get back.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Import &amp; search</span>
-        <h3>Bring the book you already have</h3>
-        <p>Word, plain text, Markdown or Fountain. Chapters and scene breaks detected,
-          shown to you, and only written once you agree. Then search every word of it.</p>
-      </div>
-      <div class="card">
-        <span class="tag">Deadlines</span>
-        <h3>Arithmetic, not encouragement</h3>
-        <p>Measures your real pace from your own history. If a plan needs 4,000 words a day,
-          it says so instead of cheering.</p>
-      </div>
+<section id="how">
+  <div class="wrap narrow">
+    <h2>How Writeline works</h2>
+    <p class="lede">One line running through seven stages, from an idea to a finished book.</p>
+    <div class="steps">
+      <div class="step"><span class="no">01</span><div><h3>Capture the idea</h3>
+        <p>Turn an idea, a premise, or a manuscript you already have into a structured project.</p></div></div>
+      <div class="step"><span class="no">02</span><div><h3>Build the story</h3>
+        <p>Develop the story bible, characters, world, themes and conflicts.</p></div></div>
+      <div class="step"><span class="no">03</span><div><h3>Map the story</h3>
+        <p>Chapters, scenes, timeline, revelations, and who knows what, when.</p></div></div>
+      <div class="step"><span class="no">04</span><div><h3>Write</h3>
+        <p>Draft in the scene editor. The manuscript compiles from what you write.</p></div></div>
+      <div class="step"><span class="no">05</span><div><h3>Analyse</h3>
+        <p>Continuity, reader knowledge, pacing and voice — computed, not remembered.</p></div></div>
+      <div class="step"><span class="no">06</span><div><h3>Revise</h3>
+        <p>Controlled revision with every earlier version preserved.</p></div></div>
+      <div class="step"><span class="no">07</span><div><h3>Finish</h3>
+        <p>Validate the manuscript and prepare it for the route you're taking to publication.</p></div></div>
     </div>
   </div>
 </section>
 
-<section>
+<section id="demo">
   <div class="wrap">
-    <h2>One file</h2>
-    <p>
-      The whole application is a single HTML file. Download it, double-click it, write.
-    </p>
-    <ul class="rows">
-      <li><span class="mark">✓</span><span>No account. No sign-up. No subscription.</span></li>
-      <li><span class="mark">✓</span><span>No internet needed — it never contacts a server, including ours.</span></li>
-      <li><span class="mark">✓</span><span>Your manuscript stays on your machine. Nobody else can read it, us included.</span></li>
-      <li><span class="mark">✓</span><span>Exports to Markdown, print-ready HTML, Fountain and Final Draft.</span></li>
-      <li><span class="mark">✓</span><span>Back up everything to one JSON file you own.</span></li>
-      <li><span class="mark">✓</span><span>Buy once. It cannot stop working, expire, or be discontinued.</span></li>
-    </ul>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="honest">
-      <h3>What it does not do</h3>
-      <p class="dim" style="margin-bottom:.6rem">
-        Stated plainly, because finding out after paying is how people ask for refunds.
-      </p>
-      <ul class="rows">
-        <li><span class="mark no">✗</span><span><strong>It does not write for you.</strong> No AI drafting, no prose generation.
-          It is a diagnostic instrument, not a ghostwriter.</span></li>
-        <li><span class="mark no">✗</span><span><strong>No sync.</strong> One browser on one machine. Moving between devices
-          means exporting the backup file and importing it.</span></li>
-        <li><span class="mark no">✗</span><span><strong>No collaboration.</strong> This is a single-author tool.</span></li>
-        <li><span class="mark no">✗</span><span><strong>Browsers can clear local data.</strong> Back up to JSON. The app makes
-          it one click; it cannot make you do it.</span></li>
-      </ul>
+    <h2>See it without reading a brochure</h2>
+    <p class="lede">Click through the systems. This is the real structure, on a real sample project.</p>
+    <div class="demo">
+      <div class="demo-tabs" role="tablist" id="demoTabs"></div>
+      <div class="demo-panel" id="demoPanel" role="tabpanel"></div>
     </div>
   </div>
 </section>
 
-<section id="buy">
+<section id="features">
   <div class="wrap">
-    <h2>Buy it</h2>
-    <p>
-      One payment. One file. Free updates to the file you bought, for as long as it is
-      being worked on.
+    <h2>Every system, in one story</h2>
+    <p class="lede">
+      Marked <span class="tag-planned">planned</span> where it isn't built yet. You should know
+      what you're getting before you decide anything.
     </p>
-    <div class="cta">
-      <!-- Replace href with your checkout link, and set the price below. -->
-      <a class="btn" href="#">Buy now</a>
-      <span class="price">— set your price here —</span>
+    <div class="grid" id="featureGrid"></div>
+  </div>
+</section>
+
+<section id="canon">
+  <div class="wrap narrow">
+    <h2>Your story stays yours.</h2>
+    <p class="lede">
+      Writeline assists the author. The author owns the story. That isn't a slogan — it's a
+      field on every record.
+    </p>
+    <div class="canon">
+      <div class="c1"><b>🟢 Canon</b><span>You established it.</span></div>
+      <div class="c2"><b>🟡 Provisional</b><span>A working assumption, not settled.</span></div>
+      <div class="c3"><b>🔵 AI suggestion</b><span>Proposed. Not yours until you say so.</span></div>
+      <div class="c4"><b>🔴 Non-canon</b><span>Considered and rejected. Kept as a record.</span></div>
     </div>
     <p class="dim" style="margin-top:1.4rem">
-      Not sure? The honest list above is the whole pitch. If the reader-memory problem is
-      not one you have, this will not help you, and you should keep your money.
+      Anything you create is canon by default. Only the AI layer may propose, and only you may
+      promote. Drafted prose resting on an unsettled fact is flagged; resting on a rejected one
+      is an error. A locked decision cannot be silently worked around. A system that can't tell
+      a machine's guess from an author's decision will eventually launder one into the other —
+      preventing exactly that is the point.
     </p>
+  </div>
+</section>
+
+<section id="style">
+  <div class="wrap narrow">
+    <h2>Develop your own literary voice.</h2>
+    <p class="lede">
+      You never type an author's name. You paste prose that sounds like what you're aiming at,
+      and Writeline measures it — sentence rhythm, dialogue ratio, adverb and filter-word rates,
+      punctuation fingerprint. It keeps the numbers and discards the text.
+    </p>
+    <div class="mix">
+      <div class="hv-h" style="margin-bottom:.6rem">Style mixer — ECHO 2084 political dystopian</div>
+      <div class="mix-row"><span>My author voice</span><span class="bar"><i style="width:45%"></i></span><span class="pc">45%</span></div>
+      <div class="mix-row"><span>Political realism</span><span class="bar"><i style="width:20%"></i></span><span class="pc">20%</span></div>
+      <div class="mix-row"><span>Psychological tension</span><span class="bar"><i style="width:15%"></i></span><span class="pc">15%</span></div>
+      <div class="mix-row"><span>Investigative suspense</span><span class="bar"><i style="width:10%"></i></span><span class="pc">10%</span></div>
+      <div class="mix-row"><span>Stark atmosphere</span><span class="bar"><i style="width:10%"></i></span><span class="pc">10%</span></div>
+      <p class="small dim" style="margin:1rem 0 0">
+        Then it tells you where the draft isn't it: <em>“Words per sentence runs 34% longer than
+        the target. Filter words 165% higher.”</em> Your voice stays a distinct component —
+        never overwritten, never averaged away.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="series">
+  <div class="wrap narrow">
+    <h2>One story is powerful. An entire universe is something else.</h2>
+    <p class="lede">
+      Characters, locations, organisations, world rules, history, unresolved threads — shared
+      across books, stored once. Edit a character in book one and book four already knows.
+    </p>
+    <div class="chain" style="margin:1.6rem 0">
+      <span class="node">Book 1</span><span class="arr">→</span>
+      <span class="node">Book 2</span><span class="arr">→</span>
+      <span class="node">Book 3</span><span class="arr">→</span>
+      <span class="node">Book 4</span>
+    </div>
+    <p class="dim small">
+      Shared canon lives at the project level; each book keeps its own chapters, scenes,
+      versions and audits. No book can overwrite another's story.
+    </p>
+  </div>
+</section>
+
+<section id="who">
+  <div class="wrap">
+    <h2>Who Writeline is for</h2>
+    <div class="grid">
+      <div class="card"><h3>Novelists</h3><p>Developing a first novel or a tenth.</p></div>
+      <div class="card"><h3>Series authors</h3><p>Managing continuity across a multi-book universe.</p></div>
+      <div class="card"><h3>Independent authors</h3><p>Who want professional story organisation without a publishing house.</p></div>
+      <div class="card"><h3>Authors using AI</h3><p>Who want assistance without surrendering control of the story.</p></div>
+      <div class="card"><h3>Screenwriters <span class="tag-planned">partial</span></h3><p>Convert a novel to Fountain and open it in Final Draft.</p></div>
+      <div class="card"><h3>Writing teams <span class="tag-planned">planned</span></h3><p>Collaborative development. Not yet built.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2>Pricing</h2>
+    <p class="lede">
+      Illustrative while Writeline is in development. Features marked <span class="tag-planned">planned</span>
+      are not built yet and are not being charged for.
+    </p>
+    <div class="toggle" role="group" aria-label="Billing period">
+      <button id="mo" aria-pressed="true">Monthly</button>
+      <button id="yr" aria-pressed="false">Annual</button>
+    </div>
+    <span class="save" id="saveNote">Save 20% annually</span>
+    <div class="plans" id="plans"></div>
+
+    <h3 style="margin-top:2.8rem;font-size:1rem">Compare everything</h3>
+    <div class="tablewrap"><table id="compareTable"></table></div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Questions</h2>
+    <div class="faq" id="faq"></div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap narrow">
+    <h2>Your story is already inside you.</h2>
+    <p class="lede" style="margin-inline:auto">
+      Writeline gives you the structure and the instruments to get it onto the page — and to
+      find out what your reader is actually holding when they get there.
+    </p>
+    <div class="cta-row">
+      <a class="btn" href="#pricing">Start writing free</a>
+      <a class="btn ghost" href="#demo">Explore the platform</a>
+    </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">
-    <p>
-      <strong>Writeline</strong> — your reader’s line through the book. Built for long
-      fiction: novels, series, and anything with enough pages that a reader can forget
-      something between them.
-    </p>
+  <div class="wrap foot-line">
+    <span class="logo">Write<b>line</b></span>
+    <span>Your writing. The reader's line.</span>
+    <span style="margin-left:auto">Built for long fiction.</span>
   </div>
 </footer>
 
+<script>
+/* Pricing is rendered from ONE data structure so a price, a tier, or the whole
+   model can change without touching layout. Nothing here is hard-coded into the
+   product architecture — the application itself has no concept of a plan. */
+const PLANS = [
+  { id:'free', name:'Free', monthly:0, for:'For discovering Writeline.', cta:'Start free',
+    features:['1 project','Story Bible','Character Bible','Scene planning','Continuity audit','Manuscript export'] },
+  { id:'writer', name:'Writer', monthly:19, for:'For individual authors.', cta:'Start writing',
+    features:['Unlimited projects','World Bible & Timeline','Revelation Map','Reader Simulator','Style Studio','Draft Vault & version history','Screenplay conversion'],
+    soon:['AI Editor'] },
+  { id:'pro', name:'Pro Author', monthly:39, popular:true, for:'For serious novel development.', cta:'Start Pro',
+    features:['Everything in Writer','Controlled Rewrite pipeline','Information audit','Publication routes'],
+    soon:['Character Lock','Promise / payoff tracker','Foreshadowing engine','Red Team','Advanced AI editorial roles'] },
+  { id:'studio', name:'Series / Studio', monthly:79, for:'For professional authors and complex series.', cta:'Build your series',
+    features:['Everything in Pro','Series engine','Shared canon across books','Series-wide continuity'],
+    soon:['Team collaboration','Shared research vault','Priority processing'] },
+];
+
+const FEATURES = [
+  ['Story Bible','Your story’s central source of truth — premise, themes, concepts.'],
+  ['Character Bible','Motivations, wounds, secrets, arcs, and the things a character would never do.'],
+  ['World Bible','Locations, factions, technology, objects — all linked to the scenes that use them.'],
+  ['Timeline','When everything happens, measured against when the reader finds out.'],
+  ['Revelation Map','Control what the author, the characters and the reader know — and when.'],
+  ['Scene Architect','Design scenes before spending pages on ones that don’t work.'],
+  ['Reader Simulator','What your reader is holding at any point — and what they’ve forgotten.'],
+  ['Style Studio','Measure your voice, mix influences, and see where the draft has drifted.'],
+  ['Continuity audits','Twenty-one checks, recomputed on every change. Nothing to keep up to date.'],
+  ['Controlled Rewrite','Seventeen stages, each computed from the graph rather than ticked by hand.'],
+  ['Draft Vault','Immutable snapshots. Restoring one snapshots the present first.'],
+  ['Series Engine','Shared canon across books. Edit a character once.'],
+  ['Screenplay','Convert to Fountain and open it in Final Draft. The novel is never touched.'],
+  ['AI Editor','Specialised editorial roles rather than one generic chatbot.', true],
+  ['Red Team','Claude deliberately tries to break your story.', true],
+  ['Research Vault','Sources, reliability, and which chapters depend on them.', true],
+];
+
+const COMPARE = [
+  ['Projects','1','Unlimited','Unlimited','Unlimited'],
+  ['Series',null,null,null,'yes'],
+  ['Story / Character Bible','yes','yes','yes','yes'],
+  ['World Bible & Timeline',null,'yes','yes','yes'],
+  ['Revelation Map',null,'yes','yes','yes'],
+  ['Reader Simulator',null,'yes','yes','yes'],
+  ['Style Studio',null,'yes','yes','yes'],
+  ['Continuity audit','yes','yes','yes','yes'],
+  ['Controlled Rewrite',null,null,'yes','yes'],
+  ['Version history',null,'yes','yes','yes'],
+  ['Screenplay export',null,'yes','yes','yes'],
+  ['AI Editor (planned)',null,'yes','yes','yes'],
+  ['Red Team (planned)',null,null,'yes','yes'],
+  ['Collaboration (planned)',null,null,null,'yes'],
+];
+
+const FAQ = [
+  ['What is Writeline?','A story development environment for long fiction. It holds your story as connected records rather than a folder of documents, so it can check the story against itself.'],
+  ['Is Writeline an AI text generator?','No. It does not write prose for you. It is a diagnostic instrument: it tells you what your reader knows, what they have forgotten, where continuity breaks and where your voice has drifted.'],
+  ['Can I use it on a manuscript I already have?','Yes. Import Word (.docx), plain text, Markdown or Fountain. Chapters and scene breaks are detected, shown to you, and only written once you agree.'],
+  ['Can I preserve my own writing voice?','That is the design. Style Studio measures your voice from your own prose and keeps it as a distinct component that is never overwritten or averaged away.'],
+  ['Can I use AI without letting it change my canon?','Yes. Every record carries a canon status. Only you can promote an AI suggestion to canon, and drafted prose resting on an unapproved fact is flagged.'],
+  ['Can Writeline analyse continuity?','Yes, and it is the core of the product. Characters on the page after they leave, reveals the reader has not reached yet, setups never paid off, chronology running backwards, and facts the reader was told too long ago to still hold.'],
+  ['Can I export my manuscript?','Markdown, print-ready HTML, Fountain and Final Draft (.fdx). Everything you make is exportable as plain text you own.'],
+  ['Is my writing private?','Today, entirely. The application runs in your browser and stores your manuscript on your own machine. It makes no network requests at all — you can verify that with the network tab.'],
+  ['Can I use it offline?','Yes. It is a single file that runs from your desktop with no internet connection and no account.'],
+  ['Is there a free plan?','Yes, and there is no card required to start.'],
+  ['Can I cancel anytime?','Yes, and your work exports to plain files you keep regardless.'],
+  ['What is not built yet?','The AI layer — AI Editor, Red Team, research and realism audits, and AI rewriting. Those are marked planned throughout this page and are not charged for.'],
+];
+
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+/* ---- pricing ---- */
+let annual = false;
+function renderPlans() {
+  const host = $('#plans');
+  host.textContent = '';
+  for (const plan of PLANS) {
+    const card = el('div', 'plan' + (plan.popular ? ' popular' : ''));
+    if (plan.popular) card.append(el('span', 'flag', 'Most popular'));
+    card.append(el('h3', null, plan.name));
+
+    const price = el('div', 'price');
+    const amount = annual ? Math.round(plan.monthly * 12 * 0.8) : plan.monthly;
+    price.textContent = '$' + amount;
+    price.append(el('small', null, plan.monthly === 0 ? '' : (annual ? ' / year' : ' / month')));
+    card.append(price, el('p', 'for', plan.for));
+
+    const list = el('ul');
+    for (const f of plan.features) list.append(el('li', null, f));
+    for (const f of plan.soon ?? []) list.append(el('li', 'soon', f + ' — planned'));
+    card.append(list);
+
+    const cta = el('a', 'btn' + (plan.popular ? '' : ' ghost'), plan.cta);
+    cta.href = '#top';
+    card.append(cta);
+    host.append(card);
+  }
+}
+$('#mo').addEventListener('click', () => setPeriod(false));
+$('#yr').addEventListener('click', () => setPeriod(true));
+function setPeriod(isAnnual) {
+  annual = isAnnual;
+  $('#mo').setAttribute('aria-pressed', String(!isAnnual));
+  $('#yr').setAttribute('aria-pressed', String(isAnnual));
+  $('#saveNote').textContent = isAnnual ? 'Two months free' : 'Save 20% annually';
+  renderPlans();
+}
+
+/* ---- features ---- */
+for (const [name, blurb, planned] of FEATURES) {
+  const card = el('div', 'card');
+  const h = el('h3', null, name);
+  if (planned) h.append(el('span', 'tag-planned', 'planned'));
+  card.append(h, el('p', null, blurb));
+  $('#featureGrid').append(card);
+}
+
+/* ---- comparison table ---- */
+(() => {
+  const table = $('#compareTable');
+  const thead = el('thead');
+  const hr = el('tr');
+  for (const h of ['', 'Free', 'Writer', 'Pro', 'Studio']) hr.append(el('th', null, h));
+  thead.append(hr);
+  const tbody = el('tbody');
+  for (const [label, ...cells] of COMPARE) {
+    const row = el('tr');
+    row.append(el('td', null, label));
+    for (const cell of cells) {
+      row.append(cell === 'yes' ? el('td', 'yes', '✓') : el('td', null, cell ?? '—'));
+    }
+    tbody.append(row);
+  }
+  table.append(thead, tbody);
+})();
+
+/* ---- faq ---- */
+for (const [q, a] of FAQ) {
+  const d = el('details');
+  d.append(el('summary', null, q), el('p', null, a));
+  $('#faq').append(d);
+}
+
+/* ---- interactive demo ---- */
+const DEMO = {
+  Story: { title: 'ECHO 2084', meta: 'Story Bible · premise and argument', kind: 'kv', rows: [
+    ['Premise', 'Memory is infrastructure, and infrastructure gets maintained by whoever owns it.'],
+    ['Argument', 'Authorship is not about accuracy. It is about consent.'],
+    ['Rule I will not break', 'The reader never sees a memory Mara has not carried.'],
+    ['Status', '🟡 Provisional — not yet locked as canon'] ] },
+  Character: { title: 'Mara Vance', meta: 'Character Bible · memory courier', kind: 'kv', rows: [
+    ['Want', 'To finish the run and get paid.'],
+    ['Need', 'To be the author of her own record.'],
+    ['Wound', 'She read a dying client’s buffer and kept the memory.'],
+    ['Lie she believes', 'Carrying is not the same as taking.'],
+    ['Would never', 'Ask permission when she can ask forgiveness.'],
+    ['Appears in', '14 scenes · 6 beats · knows 3 revelations'] ] },
+  World: { title: 'The Cradle', meta: 'World Bible · location', kind: 'kv', rows: [
+    ['What it is', 'The archive. Nobody agrees whether it is a building or a process.'],
+    ['Who controls it', 'Officially the Registry. Actually Iyo.'],
+    ['Sensory signature', 'Ozone, cold iron, and a hum below hearing.'],
+    ['Linked to', 'Registry → Kroft → cortical buffer → 9 scenes'] ] },
+  Timeline: { title: 'Chronological order', meta: 'Timeline · which is not reading order', kind: 'chain',
+    nodes: ['2079 Cradle built', '2081 Tessa filed', 'Day 1 Handoff', 'Day 2 Write-back', 'Day 4 Kroft', 'Day 6 The Cradle'] },
+  Scene: { title: 'Kroft’s office', meta: 'Scene Map · chapter 2, scene 1 · drafted', kind: 'kv', rows: [
+    ['POV', 'Mara Vance'], ['Location', 'The Cradle'], ['Present', 'Mara, Dr. Ansel Kroft'],
+    ['Leans on', '“Mara is an echo” — a twist'], ['Words', '1,240'], ['Status', 'Drafted, not revised'] ] },
+  Reader: { title: 'What the reader is holding', meta: 'Reader Simulator · after scene 12', kind: 'kv', rows: [
+    ['Still waiting on', '3 open questions — one since scene 2'],
+    ['Knows', 'The Registry audits nothing it owns'],
+    ['Fading', '“Tessa was filed” — 19 scenes of silence'],
+    ['Believes wrongly', 'That Iyo works for the Registry'],
+    ['Has met', '7 characters'] ] },
+  Audit: { title: 'Continuity', meta: 'Recomputed on every change · nothing stored', kind: 'findings', rows: [
+    ['contradiction', 'Tessa Vance appears in “The sister who is filed”, set after she leaves the story.'],
+    ['contradiction', '“Kroft’s office” uses “Mara is an echo”, but the reader only learns it later.'],
+    ['risk', '“Tessa was edited, not killed” has no reveal scene. The reader never finds out.'],
+    ['risk', 'Scene 38 relies on a fact last mentioned 23 scenes earlier.'],
+    ['risk', 'Iyo Sable knows “Tessa was edited” but no beat says how.'] ] },
+};
+
+const tabs = $('#demoTabs');
+const panel = $('#demoPanel');
+Object.keys(DEMO).forEach((key, i) => {
+  const b = el('button', 'demo-tab', key);
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', String(i === 0));
+  b.addEventListener('click', () => showDemo(key));
+  tabs.append(b);
+});
+
+function showDemo(key) {
+  for (const t of tabs.children) t.setAttribute('aria-selected', String(t.textContent === key));
+  const data = DEMO[key];
+  panel.textContent = '';
+  panel.append(el('h3', null, data.title), el('div', 'demo-meta', data.meta));
+
+  if (data.kind === 'kv') {
+    const grid = el('div', 'kv-grid');
+    for (const [k, v] of data.rows) {
+      const cell = el('div', 'kv');
+      cell.append(el('b', null, k), el('span', null, v));
+      grid.append(cell);
+    }
+    panel.append(grid);
+  } else if (data.kind === 'chain') {
+    const chain = el('div', 'chain');
+    data.nodes.forEach((n, i) => {
+      if (i) chain.append(el('span', 'arr', '→'));
+      chain.append(el('span', 'node', n));
+    });
+    panel.append(chain);
+  } else {
+    for (const [tag, text] of data.rows) {
+      const row = el('div', 'finding' + (tag === 'risk' ? ' warn' : ''));
+      row.append(el('span', 'tag', tag), el('span', null, text));
+      panel.append(row);
+    }
+  }
+}
+
+/* ---- mobile nav ---- */
+$('#navToggle').addEventListener('click', (e) => {
+  const open = $('#navLinks').classList.toggle('open');
+  e.currentTarget.setAttribute('aria-expanded', String(open));
+});
+$('#navLinks').addEventListener('click', (e) => {
+  if (e.target.tagName === 'A') $('#navLinks').classList.remove('open');
+});
+
+renderPlans();
+showDemo('Story');
+</script>
 </body>
 </html>

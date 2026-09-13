@@ -42,6 +42,9 @@ jobs:
       - name: Import and search tests
         run: node tests/io.mjs
 
+      - name: Landing page tests
+        run: node tests/landing.mjs
+
       - name: Build the single-file distributable
         run: node build.mjs
 

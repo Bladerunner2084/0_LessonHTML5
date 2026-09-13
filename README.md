@@ -62,6 +62,7 @@ node tests/reader.mjs           # 17 tests for the Reader Model
 node tests/script.mjs           # 21 tests for the screenplay converter
 node tests/voice.mjs            # 22 tests for the style engine
 node tests/io.mjs               # 17 tests for import and search
+node tests/landing.mjs          # 23 tests for the marketing site
 node tests/browser.mjs          # 78 tests driving the real app in Chromium
 node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
@@ -421,10 +422,12 @@ tests/reader.mjs            17 Reader Model tests on a synthetic 40-scene book
 tests/script.mjs            21 screenplay conversion and export tests
 tests/voice.mjs             22 style measurement, blending and drift tests
 tests/io.mjs                17 import (including a real .docx) and search tests
+tests/landing.mjs           23 marketing-site tests, honesty rules included
 tests/browser.mjs           78 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
 build.mjs                   inlines the module graph into one distributable file
-landing/index.html          the sales page (the only thing GitHub Pages publishes)
+landing/index.html          the marketing site (the only thing GitHub Pages publishes)
+docs/prd-experience.md      landing/pricing/onboarding/tutorials PRD, with build status
 docs/selling.md             how to actually put it in front of buyers
 .github/workflows/pages.yml CI, and deploy to GitHub Pages from master
 ```
@@ -471,6 +474,34 @@ consequences worth stating so they do not get designed away later:
 A serious writer's objection to most of this category is that it is a hobby toy
 with a subscription. The way not to be that is to be *diagnostic* — to tell the
 author something true they could not otherwise see.
+
+## The marketing site
+
+`landing/index.html` implements the acquisition experience — hero, positioning,
+the seven-step journey, an interactive product demo, the canon philosophy, Style
+Studio, series, pricing with a monthly/annual toggle, a comparison table and the
+FAQ — as one static page with no dependencies, sharing the application's design
+tokens so crossing from site to product has no seam.
+
+**Pricing renders from one data structure** (`PLANS`), so a price, a tier or the
+whole model changes by editing a list. The application itself has no concept of a
+plan, and nothing about pricing is hard-coded into the product architecture.
+
+Three honesty rules are enforced by tests rather than left to discipline, because
+marketing copy that outruns the software is a refund generator and, for a paid
+product, a misrepresentation:
+
+- Every unbuilt feature is visibly marked `planned`, on the feature grid and
+  inside the pricing tiers.
+- The FAQ answers "what is not built yet?" plainly.
+- Claims are specific and checkable — "it makes no network requests at all" can
+  be verified in a network tab, unlike "your data is safe with us".
+
+What is specified but **not** built — signup, accounts, billing, subscription
+management and the tutorial system — is recorded with its reason in
+[docs/prd-experience.md](docs/prd-experience.md). The first four wait on the
+backend fork below; the tutorial system is months of content writing and is
+deliberately not started.
 
 ## What "SaaS" would still require
 
