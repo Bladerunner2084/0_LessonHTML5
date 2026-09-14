@@ -59,7 +59,7 @@ if (!pw) {
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
   'revelations', 'chapters', 'scenes', 'manuscript', 'screenplay', 'style', 'reader', 'audit',
   'decisions', 'inbox', 'publish'];
-const HEADINGS = ['ECHO 2084', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
+const HEADINGS = ['The Last Signal', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
   'Screenplay', 'Style Studio', 'Reader Simulator', 'Continuity', 'Decision Log',
   'Questions & Ideas', 'Publication'];
@@ -87,14 +87,17 @@ try {
   check('the app boots and paints the navigator',
     await page.locator('.tree-head h1').count() > 0);
 
-  await page.getByRole('button', { name: 'Sample' }).click();
+  await page.getByRole('button', { name: 'Load demo', exact: true }).click();
   await page.waitForTimeout(600);
 
   const projects = await page.locator('.node.project .node-label .name').allTextContents();
-  check('the sample seeds the author project, the demo fixture and the two futures',
-    JSON.stringify(projects) === JSON.stringify(
-      ['ECHO 2084', 'ECHO 2084 — Demo Fixture', 'Future Novel', 'Future Series']),
+    /* PRD #2 §52: a clean account carries no personal content, and every demo
+   * project says it is one. */
+  check('the demo seeds only projects labelled as demos',
+    projects.length === 2 && projects.every((t) => t.includes('Demo Project')),
     `got ${JSON.stringify(projects)}`);
+  check('no personal or ECHO 2084 content reaches a new account',
+    !JSON.stringify(projects).includes('ECHO 2084'));
 
   /* The sample opens on the demo fixture's dashboard (PRD §30/§41). */
   check('the dashboard names exactly one next action',
@@ -139,7 +142,7 @@ try {
   check('the view position survives a reload',
     (await page.locator('.view-head h2').first().textContent())?.trim() === 'Scene Map');
 
-  await page.locator('.node.project .node-label', { hasText: 'Future Series' }).click();
+  await page.locator('.node.project .node-label', { hasText: 'Example Series' }).click();
   await page.waitForTimeout(300);
   check('a series exposes its books',
     (await page.locator('.node.book .node-label .name').allTextContents()).length === 3);
@@ -159,7 +162,7 @@ try {
     (await page.locator('.list .list-item .name').allTextContents()).includes('Wintermark'));
 
   /* PRD §26 — the Draft Vault must preserve, and a restore must be reversible. */
-  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.locator('.node.project .node-label', { hasText: 'The Last Signal' }).click();
   await page.waitForTimeout(300);
   await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('vault')).click();
   await page.waitForTimeout(250);
@@ -248,7 +251,7 @@ try {
     await page.locator('.sub-row').count() === 1);
 
   /* The Reader Simulator: the curve renders, and scrubbing changes the mind. */
-  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.locator('.node.project .node-label', { hasText: 'The Last Signal' }).click();
   await page.waitForTimeout(300);
   await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('reader')).click();
   await page.waitForTimeout(350);
@@ -275,9 +278,9 @@ try {
    * these match case-insensitively. */
   const mid = await scrubTo(2);
   check('a planted-but-unrevealed fact sits in “still waiting on”',
-    /still waiting on · 1[\s\S]*Mara is an echo/i.test(mid), mid.slice(0, 120));
+    /still waiting on · 1[\s\S]*signal is addressed to Ines/i.test(mid), mid.slice(0, 120));
   check('after its reveal the same fact has moved to “knows”',
-    /knows · 1[\s\S]*Mara is an echo/i.test(late) && /still waiting on · 0/i.test(late),
+    /knows · 1[\s\S]*signal is addressed to Ines/i.test(late) && /still waiting on · 0/i.test(late),
     late.slice(0, 120));
 
   check('the caption names the scene the reader has just finished',
@@ -367,9 +370,9 @@ try {
     /%$/.test((await page.locator('.mix-share').first().textContent()) ?? ''));
 
   /* Search: the thing whose absence proved the app had never met a manuscript. */
-  await page.locator('.node.project .node-label', { hasText: 'Demo Fixture' }).click();
+  await page.locator('.node.project .node-label', { hasText: 'The Last Signal' }).click();
   await page.waitForTimeout(300);
-  await page.locator('.search-box').fill('Terminus');
+  await page.locator('.search-box').fill('Relay Nine');
   await page.waitForTimeout(400);
   check('searching replaces the workspace with results',
     await page.locator('.result').count() >= 1);

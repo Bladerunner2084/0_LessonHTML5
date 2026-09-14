@@ -26,7 +26,7 @@ const { bookId } = w.current();
 await test('the facade loads and reports the open book', () => {
   const now = w.current();
   assert.ok(now.bookId && now.projectId);
-  assert.match(now.project.title, /ECHO 2084/);
+  assert.match(now.project.title, /The Last Signal/);
 });
 
 await test('findings arrive in the shape a findings UI needs', () => {
@@ -127,7 +127,7 @@ await test('style drift comes back as rows a UI can print directly', () => {
 });
 
 await test('search returns hits with snippets ready to render', () => {
-  const hits = w.search('Cradle');
+  const hits = w.search('Vault');
   assert.ok(hits.length >= 1);
   assert.ok(hits[0].title && hits[0].view);
   assert.ok(Array.isArray(hits[0].snippet));

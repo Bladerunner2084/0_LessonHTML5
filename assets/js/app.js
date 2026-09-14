@@ -74,11 +74,12 @@ function renderWorkspace() {
     bookId
       ? renderView(bookId)
       : h('div', { class: 'welcome' },
-        h('h2', {}, 'Nothing open'),
+        h('h2', {}, 'Create your first project'),
         h('p', {},
-          'Create a project on the left, or load the ECHO 2084 sample to see what the '
-          + 'continuity engine does with a book that already contradicts itself.'),
-        h('button', { class: 'btn btn-primary', onclick: loadSample }, 'Load ECHO 2084')));
+          'Nothing here belongs to anyone but you. Create a project on the left to start, '
+          + 'or load the optional demo — a short invented novel that already contradicts '
+          + 'itself, so the continuity engine has something to catch.'),
+        h('button', { class: 'btn btn-primary', onclick: loadSample }, 'Load demo project')));
 }
 
 function renderHeader() {
@@ -114,7 +115,7 @@ function renderHeader() {
     }),
 
     h('div', { class: 'header-actions' },
-      h('button', { class: 'btn btn-small btn-ghost', onclick: loadSample }, 'Sample'),
+      h('button', { class: 'btn btn-small btn-ghost', onclick: loadSample }, 'Load demo'),
       h('button', { class: 'btn btn-small btn-ghost', onclick: backup }, 'Back up all'),
       h('button', {
         class: 'btn btn-small btn-ghost',
@@ -152,7 +153,7 @@ async function restore(event) {
 }
 
 async function loadSample() {
-  const existing = S.list('project').find((p) => p.title.startsWith('ECHO 2084'));
+  const existing = S.list('project').find((p) => p.title.includes('Demo Project'));
   if (existing) {
     S.setUi({ projectId: existing.id, bookId: S.books(existing.id)[0]?.id, view: 'dashboard' });
     return;

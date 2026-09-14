@@ -34,7 +34,7 @@ async function test(name, fn) {
 await S.load();
 await seedPlatform();
 
-const echo = S.list('project').find((p) => p.title === 'ECHO 2084 — Demo Fixture');
+const echo = S.list('project').find((p) => p.title === 'The Last Signal — Demo Project');
 const echoBook = S.books(echo.id)[0];
 
 /* Every factory must let callers override its defaults. Four of them once did
@@ -49,21 +49,35 @@ await test('every record factory honours the fields passed to it', () => {
   }
 });
 
-await test('the platform seeds the projects in the spec', () => {
+await test('only demo projects are seeded, and both say so in their name', () => {
   const titles = S.list('project').map((p) => p.title).sort();
   assert.deepEqual(titles,
-    ['ECHO 2084', 'ECHO 2084 — Demo Fixture', 'Future Novel', 'Future Series']);
+    ['Example Series — Demo Project', 'The Last Signal — Demo Project']);
+  assert.ok(titles.every((t) => t.includes('Demo Project')));
 });
 
-/* PRD §47: do not populate ECHO 2084 with invented canon. */
-await test('the author’s ECHO 2084 project contains no invented canon', () => {
-  const real = S.list('project').find((p) => p.title === 'ECHO 2084');
-  const bookId = S.books(real.id)[0].id;
-  assert.equal(S.entities(bookId, 'character').length, 0, 'invented characters found');
-  assert.ok(S.questions(bookId).length >= 4, 'expected placeholder open questions');
-  const pages = S.inBook('note', bookId).filter((n) => n.slot === 'story');
-  assert.ok(pages.every((n) => n.body.includes('Placeholder')),
-    'story pages must be placeholders, not invented answers');
+/* PRD #2 §2 and §52: the author's own novel is not product data. A clean
+ * account must never open carrying somebody else's story. */
+await test('no ECHO 2084 or personal content reaches the seeded database', () => {
+  const types = ['project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene',
+    'note', 'decision', 'question', 'idea', 'styleprofile'];
+  const everything = JSON.stringify(types.flatMap((t) => S.list(t)));
+  for (const banned of ['ECHO 2084', 'Mara Vance', 'Iyo Sable', 'Kroft', 'Tessa Vance',
+    'Terminus', 'Cradle']) {
+    assert.ok(!everything.includes(banned),
+      `"${banned}" is seeded into the product — PRD #2 §52 forbids this`);
+  }
+});
+
+await test('every seeded project is labelled a demo and is never canon', () => {
+  for (const project of S.list('project')) {
+    assert.match(project.title, /Demo Project$/);
+  }
+  const invented = ['entity', 'beat', 'revelation', 'scene', 'chapter']
+    .flatMap((t) => S.list(t));
+  const leaked = invented.filter((r) => (r.canon ?? 'canon') === 'canon');
+  assert.equal(leaked.length, 0,
+    `${leaked.length} demo records claim canon status`);
 });
 
 /* PRD §34: an AI suggestion must never be mistaken for author-established fact. */
@@ -82,7 +96,7 @@ await test('drafted prose resting on unsettled facts is reported', () => {
 });
 
 await test('a record ruled non-canon under drafted prose is an error, not a warning', async () => {
-  const mara = S.entities(echoBook.id, 'character').find((e) => e.name === 'Mara Vance');
+  const mara = S.entities(echoBook.id, 'character').find((e) => e.name === 'Ines Calloway');
   const before = mara.canon;
   await S.patch(mara.id, { canon: 'rejected' });
   const found = audit(echoBook.id).filter((f) => f.rule === 'rejected-canon-in-prose');
@@ -209,7 +223,7 @@ await test('velocity is measured from recorded history, never guessed', async ()
 });
 
 await test('logging words is idempotent within a day', async () => {
-  const bookId = S.books(S.list('project').find((p) => p.title === 'Future Novel').id)[0].id;
+  const bookId = S.books(S.list('project').find((p) => p.title.startsWith('Example Series')).id)[0].id;
   await logWords(bookId);
   await logWords(bookId);
   const rows = S.list('wordlog').filter((w) => w.bookId === bookId && w.date === today());
@@ -228,14 +242,13 @@ await test('a locked decision is recorded with its reason', () => {
 });
 
 await test('a series gets its books; a standalone novel gets exactly one', () => {
-  const series = S.list('project').find((p) => p.title === 'Future Series');
-  const novel = S.list('project').find((p) => p.title === 'Future Novel');
+  const series = S.list('project').find((p) => p.title.startsWith('Example Series'));
   assert.equal(S.books(series.id).length, 3);
-  assert.equal(S.books(novel.id).length, 1);
+  assert.equal(S.books(echo.id).length, 1);
 });
 
 await test('series-scoped records belong to every book without being copied', () => {
-  const series = S.list('project').find((p) => p.title === 'Future Series');
+  const series = S.list('project').find((p) => p.title.startsWith('Example Series'));
   const shared = S.list('entity').filter((e) => e.projectId === series.id && e.bookId === null);
   assert.equal(shared.length, 1, 'expected exactly one shared entity record');
   for (const book of S.books(series.id)) {
@@ -246,22 +259,22 @@ await test('series-scoped records belong to every book without being copied', ()
 
 await test('reading order is chapters in order, then scenes in order', () => {
   const scenes = S.bookScenes(echoBook.id);
-  assert.equal(scenes[0].title, 'Terminus, 04:12');
-  assert.equal(scenes.at(-1).title, 'Choosing the kinder version');
+  assert.equal(scenes[0].title, 'Relay Nine, 04:12');
+  assert.equal(scenes.at(-1).title, 'Answering');
   assert.equal(scenes.length, 6);
 });
 
 await test('continuity catches the planted premature-knowledge fault', () => {
   const found = audit(echoBook.id).filter((f) => f.rule === 'premature-knowledge');
   assert.ok(found.length >= 1, 'expected the reader-knowledge contradiction');
-  assert.match(found[0].message, /Kroft’s office/);
+  assert.match(found[0].message, /Ferreira’s office/);
   assert.equal(found[0].severity, 'error');
 });
 
 await test('continuity catches the planted ghost-cast fault', () => {
   const found = audit(echoBook.id).filter((f) => f.rule === 'ghost-cast');
   assert.ok(found.length >= 1, 'expected a character appearing after they leave the story');
-  assert.match(found[0].message, /Tessa Vance/);
+  assert.match(found[0].message, /Dana Calloway/);
 });
 
 await test('a flashback flag silences the cast gate, as designed', async () => {
@@ -273,7 +286,7 @@ await test('a flashback flag silences the cast gate, as designed', async () => {
 });
 
 await test('moving the reveal earlier clears the premature-knowledge finding', async () => {
-  const rev = S.revelations(echoBook.id).find((r) => r.label === 'Mara is an echo');
+  const rev = S.revelations(echoBook.id).find((r) => r.label === 'The signal is addressed to Ines');
   const earlier = S.bookScenes(echoBook.id)[1];
   const original = rev.revealedIn;
   await S.patch(rev.id, { revealedIn: earlier.id });
@@ -284,7 +297,7 @@ await test('moving the reveal earlier clears the premature-knowledge finding', a
 
 await test('an untracked reveal is reported as never revealed', () => {
   const found = audit(echoBook.id).filter((f) => f.rule === 'never-revealed');
-  assert.ok(found.some((f) => /Tessa was edited/.test(f.message)));
+  assert.ok(found.some((f) => /Dana was corrected/.test(f.message)));
 });
 
 await test('a holder with no source beat is flagged', () => {
@@ -293,7 +306,7 @@ await test('a holder with no source beat is flagged', () => {
 });
 
 await test('deleting a character scrubs them from every scene, beat and revelation', async () => {
-  const tessa = S.entities(echoBook.id, 'character').find((e) => e.name === 'Tessa Vance');
+  const tessa = S.entities(echoBook.id, 'character').find((e) => e.name === 'Dana Calloway');
   await S.remove(tessa.id);
   const stillReferenced = [
     ...S.bookScenes(echoBook.id).flatMap((s) => s.presentIds ?? []),
@@ -326,7 +339,7 @@ await test('the manuscript compiles from scenes, never from a stored copy', asyn
   const scene = S.bookScenes(echoBook.id)[0];
   await S.patch(scene.id, { prose: 'One line of prose.' });
   const md = toMarkdown(echoBook.id);
-  assert.match(md, /^# ECHO 2084/);
+  assert.match(md, /^# The Last Signal/);
   assert.match(md, /## 1\. Handoff/);
   assert.ok(md.includes('One line of prose.'));
   assert.ok(md.includes('* * *'), 'expected a scene divider between scenes');

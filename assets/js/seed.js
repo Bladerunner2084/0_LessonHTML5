@@ -1,288 +1,261 @@
-/* seed.js — sample data.
+/* seed.js — optional demonstration content.
  *
- * PRD §47 is explicit: do not populate ECHO 2084 with invented canon unless the
- * author provides it. So the worked example is a clearly separate DEMO FIXTURE
- * with a made-up cast, and every record it creates is marked `provisional` or
- * `suggested` rather than canon. Nothing invented here can be mistaken for the
- * author's story, by a human or by a future AI pass reading the graph.
+ * PRD #2 §2 and §52 are a hard architectural rule, and the previous version of
+ * this file broke it: it seeded "ECHO 2084" — the author's own novel — into the
+ * product, so a clean account would have opened carrying somebody else's story.
+ * That is the difference between a platform and one writer's tool.
  *
- * The real ECHO 2084 project is created empty, with placeholder Story Bible
- * pages and open questions instead of invented answers.
+ * The rules this file now obeys:
  *
- * The fixture ships with two deliberate continuity errors — a scene leaning on
- * a fact the reader has not been given, and a character standing in a scene set
- * after she is gone — because a clean sample demonstrates nothing.
+ *   Nothing here is created unless the user asks for it. A new account has no
+ *   projects and is offered "Create your first project".
+ *
+ *   Every project it creates is named "— Demo Project" and every record it
+ *   writes is marked provisional or AI-suggested, never canon. Demo content
+ *   cannot be mistaken for the author's own work by a person or by a later
+ *   AI pass reading the graph.
+ *
+ *   No real author's manuscript, characters, world or names appear. The demo is
+ *   "The Last Signal", invented for this purpose (PRD §53).
+ *
+ * The fixture ships with two deliberate continuity faults, because a clean
+ * sample demonstrates nothing about a continuity engine.
  */
 
 import * as S from './state.js';
 
-export async function seedEcho2084() {
+const DEMO_SUFFIX = ' — Demo Project';
+
+export async function seedDemo() {
   const project = await S.create('project', {
-    title: 'ECHO 2084 — Demo Fixture',
+    title: `The Last Signal${DEMO_SUFFIX}`,
     kind: 'novel',
     canon: 'provisional',
-    logline: 'Invented demonstration content. Not the author\u2019s ECHO 2084.',
+    logline: 'Demonstration content. Not a real manuscript.',
   });
   const pid = project.id;
   const book = await S.create('book', {
     projectId: pid, title: project.title, order: 0, targetWords: 95000, canon: 'provisional',
   });
   const bid = book.id;
-  /* Nothing the fixture invents is canon. This is not decoration: the
-   * canon-discipline rules in lint.js read exactly this field, so the sample
-   * demonstrates the platform's central promise instead of describing it. */
+
+  /* Nothing the demo invents is canon. The canon-discipline rules in lint.js
+   * read exactly this field, so the fixture demonstrates the platform's central
+   * promise instead of describing it. */
   const at = (f) => ({ projectId: pid, bookId: bid, canon: 'provisional', ...f });
 
   await S.create('note', at({
     slot: 'draft0', title: 'Draft 0',
-    body: 'Courier city. Everyone rents memory the way they rent power. Mara moves other '
-      + "people's recollections across the grid in a cortical buffer she is not licensed to "
-      + 'read. Somebody starts writing into the buffer on the return leg.\n\n'
-      + 'The question the book is asking: if the record of you is edited and you cannot tell, '
-      + 'were you ever the author?\n\n'
-      + 'Ending, maybe: she chooses the edited version. Because it is kinder. That should '
-      + 'feel like a defeat and read like mercy.',
+    body: 'A relay station picks up a transmission that is addressed to someone. '
+      + 'Nobody on the station is expecting mail.\n\n'
+      + 'The question the book is asking: if a message finds you by name, does that '
+      + 'make you the person it was meant for?\n\n'
+      + 'Ending, maybe: she answers it. That should feel like courage and read like a '
+      + 'mistake.',
   }));
 
   await S.create('note', at({
     slot: 'story', title: 'Premise & argument',
-    body: 'Premise: memory is infrastructure, and infrastructure gets maintained by whoever '
-      + 'owns it.\n\nArgument: authorship is not about accuracy. It is about consent.\n\n'
-      + 'Rule I refuse to break: the reader never sees a memory Mara has not carried.',
+    body: 'Premise: a signal arrives with a recipient and no sender.\n\n'
+      + 'Argument: being chosen is not the same as being known.\n\n'
+      + 'Rule I refuse to break: the reader never hears the signal directly.',
   }));
 
-  const mk = async (kind, name, summary, fields) =>
+  const mk = (kind, name, summary, fields) =>
     S.create('entity', at({ kind, name, summary, fields }));
 
-  const mara = await mk('character', 'Mara Vance',
-    'Memory courier, eleven years on the grid, one unlicensed read she has never confessed.', {
-      Want: 'To finish the run and get paid.',
-      Need: 'To be the author of her own record.',
-      Wound: 'She read a dying client’s buffer and kept the memory.',
-      'Lie they believe': 'Carrying is not the same as taking.',
-      Voice: 'Clipped, present tense, allergic to metaphor until she is frightened.',
+  const lead = await mk('character', 'Ines Calloway',
+    'Relay technician, nine years on the station, one unlogged decision she has never explained.', {
+      Want: 'To finish the rotation and go home.',
+      Need: 'To be known by someone who is not paid to know her.',
+      Wound: 'She logged a distress call as noise and was right, and it has not helped.',
+      'Lie they believe': 'Being careful is the same as being good.',
+      'Would NEVER do': 'Answer on behalf of someone else.',
+      Voice: 'Flat, technical, allergic to metaphor until she is frightened.',
     });
-  const iyo = await mk('character', 'Iyo Sable',
-    'Archive fixer. Charming in the way a door is charming when it is the only one.', {
-      Want: 'The Cradle intact.',
-      Method: 'Let people conclude what you need them to conclude.',
+  const fixer = await mk('character', 'Tomas Rell',
+    'Station administrator. Agreeable in the way a locked door is agreeable.', {
+      Want: 'The relay to stay quiet.',
+      Method: 'Let people reach the conclusion you need them to reach.',
     });
-  const kroft = await mk('character', 'Dr. Ansel Kroft',
-    'Built the Cradle. Regrets the architecture, not the decision.', {
-      Want: 'Absolution he will not ask for.',
-      Wound: 'His first edit was on his own daughter.',
+  const builder = await mk('character', 'Dr. Ana Ferreira',
+    'Designed the relay. Regrets the architecture, not the decision.', {
+      Want: 'Absolution she will not ask for.',
+      Wound: 'Her first correction was to her own record.',
     });
-  const tessa = await mk('character', 'Tessa Vance',
-    'Mara’s sister. Dead before the book opens — or filed that way.', {
-      'Function in plot': 'The edit Mara cannot see because she is standing inside it.',
+  const sister = await mk('character', 'Dana Calloway',
+    'Ines’s sister. Filed as lost before the book opens.', {
+      'Function in plot': 'The correction Ines cannot see, because she is standing inside it.',
     });
 
-  const terminus = await mk('location', 'Terminus Station',
-    'Where couriers hand off. Wet concrete, sodium light, no cameras that work.', {
+  const platform = await mk('location', 'Relay Nine',
+    'Wet steel, sodium light, and no window that faces anything.', {
       'Sensory signature': 'Ozone and cold iron.',
     });
-  const cradle = await mk('location', 'The Cradle',
-    'The archive itself. Nobody agrees whether it is a building or a process.', {
-      'Who controls it': 'Officially the Registry. Actually Iyo.',
+  const archive = await mk('location', 'The Vault',
+    'Where the station keeps what it has decided not to transmit.', {
+      'Who controls it': 'Officially the Authority. Actually Tomas.',
     });
-  const registry = await mk('faction', 'The Registry',
-    'Licenses memory transit. Audits nothing it owns.', {});
-  const buffer = await mk('item', 'Cortical buffer',
-    'Courier hardware. Read-only by law, write-capable by design.', {
+  await mk('faction', 'The Authority',
+    'Licenses transmission. Audits nothing it owns.', {});
+  await mk('item', 'Carrier buffer',
+    'Station hardware. Read-only by regulation, write-capable by design.', {
       'Cost of using it': 'Every carry leaves residue.',
     });
-  await mk('concept', 'Consent vs. accuracy',
-    'The book’s central argument: an accurate record you did not agree to is still a theft.', {
+  await mk('concept', 'Chosen versus known',
+    'The argument: a message addressed to you is not the same as being understood.', {
       'Thematic weight': 'Every act break should re-ask it with higher stakes.',
     });
 
-  /* Chapters and scenes, in reading order. */
   const chapterSpecs = [
     ['Handoff', 'Establish the job, the rules, and the residue.', [
-      ['Terminus, 04:12', 'Mara takes a buffer she is told not to read.', 'drafted', mara, terminus,
-        'The rain at Terminus does not fall so much as accumulate.\n\n'
-        + 'Iyo was already there when she arrived, which meant he had been there a while, '
-        + 'which meant the handoff had a second purpose she had not been told about.'],
-      ['The return leg', 'Something writes into the buffer while she sleeps.', 'drafted', mara, terminus,
+      ['Relay Nine, 04:12', 'Ines takes a carry she is told not to open.', 'drafted', lead, platform,
+        'The rain on Relay Nine does not fall so much as accumulate.\n\n'
+        + 'Tomas was already at the console when she arrived, which meant he had been '
+        + 'there a while, which meant the handoff had a second purpose she had not been told.'],
+      ['The return leg', 'Something writes into the buffer while she sleeps.', 'drafted', lead, platform,
         'She woke with a memory of a kitchen she had never stood in.'],
     ]],
-    ['Residue', 'The first contradiction Mara cannot explain away.', [
-      ['Kroft’s office', 'Mara asks the wrong question well.', 'drafted', mara, cradle,
-        'Kroft did not deny it. He reorganised it.'],
-      ['The sister who is filed', 'Tessa appears, and should not be able to.', 'outlined', mara, cradle, ''],
+    ['Residue', 'The first contradiction Ines cannot explain away.', [
+      ['Ferreira’s office', 'Ines asks the wrong question well.', 'drafted', lead, archive,
+        'Ferreira did not deny it. She reorganised it.'],
+      ['The sister who is filed', 'Dana appears, and should not be able to.', 'outlined', lead, archive, ''],
     ]],
-    ['The Cradle', 'The reveal and its price.', [
-      ['What the archive is for', 'Iyo explains the Cradle to Mara.', 'outlined', iyo, cradle, ''],
-      ['Choosing the kinder version', 'Mara decides.', 'blank', mara, cradle, ''],
+    ['The Vault', 'The reveal and its price.', [
+      ['What the relay is for', 'Tomas explains the Vault to Ines.', 'outlined', fixer, archive, ''],
+      ['Answering', 'Ines decides.', 'blank', lead, archive, ''],
     ]],
   ];
 
-  const scenesByTitle = {};
-  for (const [ci, [title, summary, scenes]] of chapterSpecs.entries()) {
-    const chapter = await S.create('chapter', at({
-      title, summary, order: ci, targetWords: 4000,
-    }));
-    for (const [si, [sTitle, sSummary, status, pov, place, prose]] of scenes.entries()) {
-      const scene = await S.create('scene', at({
-        chapterId: chapter.id,
-        order: si,
-        title: sTitle,
-        summary: sSummary,
-        status,
-        pov: pov.id,
-        locationId: place.id,
-        presentIds: [pov.id],
-        prose,
+  const scenes = {};
+  for (const [ci, [title, summary, list]] of chapterSpecs.entries()) {
+    const chapter = await S.create('chapter', at({ title, summary, order: ci, targetWords: 4000 }));
+    for (const [si, [sTitle, sSummary, status, pov, place, prose]] of list.entries()) {
+      scenes[sTitle] = await S.create('scene', at({
+        chapterId: chapter.id, order: si, title: sTitle, summary: sSummary, status,
+        pov: pov.id, locationId: place.id, presentIds: [pov.id], prose,
       }));
-      scenesByTitle[sTitle] = scene;
     }
   }
 
   /* Chronology. Order in this array IS story time. */
   const beatSpecs = [
-    ['Tessa is filed', 'death', 'Year 2081', [tessa.id], null],
-    ['Kroft builds the Cradle', 'event', 'Year 2079', [kroft.id], null],
-    ['The handoff at Terminus', 'event', 'Day 1, 04:12', [mara.id, iyo.id], 'Terminus, 04:12'],
-    ['Write-back on the return leg', 'event', 'Day 2, 02:40', [mara.id], 'The return leg'],
-    ['Mara confronts Kroft', 'event', 'Day 4, 11:00', [mara.id, kroft.id], 'Kroft’s office'],
-    ['Tessa appears in the archive', 'event', 'Day 5, 23:15', [mara.id, tessa.id],
-      'The sister who is filed'],
-    ['Iyo explains the Cradle', 'event', 'Day 6, 09:00', [mara.id, iyo.id],
-      'What the archive is for'],
+    ['Dana is filed', 'death', 'Year 3', [sister.id], null],
+    ['Ferreira builds the relay', 'event', 'Year 1', [builder.id], null],
+    ['The handoff at Relay Nine', 'event', 'Day 1, 04:12', [lead.id, fixer.id], 'Relay Nine, 04:12'],
+    ['Write-back on the return leg', 'event', 'Day 2, 02:40', [lead.id], 'The return leg'],
+    ['Ines confronts Ferreira', 'event', 'Day 4, 11:00', [lead.id, builder.id], 'Ferreira’s office'],
+    ['Dana appears in the vault', 'event', 'Day 5, 23:15', [lead.id, sister.id], 'The sister who is filed'],
+    ['Tomas explains the Vault', 'event', 'Day 6, 09:00', [lead.id, fixer.id], 'What the relay is for'],
   ];
 
   const beats = {};
   for (const [i, [label, kind, storyTime, entityIds, sceneTitle]] of beatSpecs.entries()) {
     beats[label] = await S.create('beat', at({
       label, kind, storyTime, entityIds, order: i,
-      sceneId: sceneTitle ? scenesByTitle[sceneTitle].id : null,
+      sceneId: sceneTitle ? scenes[sceneTitle].id : null,
     }));
   }
 
-  /* Revelations. */
   const echo = await S.create('revelation', at({
-    label: 'Mara is an echo',
-    fact: 'The Mara carrying the buffer is a reconstruction. The original consented once, '
-      + 'to something else.',
+    label: 'The signal is addressed to Ines',
+    fact: 'The transmission names her. It was sent before she was posted to the station.',
     weight: 'twist',
-    revealedIn: scenesByTitle['What the archive is for'].id,
-    plantedIn: [scenesByTitle['The return leg'].id, scenesByTitle['Kroft’s office'].id],
+    revealedIn: scenes['What the relay is for'].id,
+    plantedIn: [scenes['The return leg'].id, scenes['Ferreira’s office'].id],
     knownBy: [
-      { entityId: iyo.id, sinceBeatId: beats['Kroft builds the Cradle'].id },
-      { entityId: kroft.id, sinceBeatId: beats['Kroft builds the Cradle'].id },
+      { entityId: fixer.id, sinceBeatId: beats['Ferreira builds the relay'].id },
+      { entityId: builder.id, sinceBeatId: beats['Ferreira builds the relay'].id },
     ],
   }));
 
   await S.create('revelation', at({
-    label: 'Tessa was edited, not killed',
-    fact: 'Tessa’s death record is an edit the Registry signed off on.',
+    label: 'Dana was corrected, not lost',
+    fact: 'Dana’s loss record is an edit the Authority signed off on.',
     weight: 'major',
     revealedIn: null,
     plantedIn: [],
-    knownBy: [{ entityId: iyo.id, sinceBeatId: null }],
+    knownBy: [{ entityId: fixer.id, sinceBeatId: null }],
   }));
 
   /* --- the two planted faults ---------------------------------------- */
 
-  /* 1. Premature knowledge: this scene is read in chapter 2, but the reader
-   *    is not given the echo reveal until chapter 3. */
-  await S.patch(scenesByTitle['Kroft’s office'].id, {
+  /* 1. Premature knowledge: read in chapter two, revealed in chapter three. */
+  await S.patch(scenes['Ferreira’s office'].id, {
     usesRevelationIds: [echo.id],
-    presentIds: [mara.id, kroft.id],
+    presentIds: [lead.id, builder.id],
   });
 
-  /* 2. Ghost cast: Tessa's exit beat is first in story time, so she cannot
-   *    stand in a scene placed on Day 5 without a flashback flag. */
-  await S.patch(scenesByTitle['The sister who is filed'].id, {
-    presentIds: [mara.id, tessa.id],
+  /* 2. Ghost cast: Dana's exit is first in story time, so she cannot stand in a
+   * scene placed on Day 5 without a flashback flag. */
+  await S.patch(scenes['The sister who is filed'].id, {
+    presentIds: [lead.id, sister.id],
   });
 
-  /* One record left as an outright AI suggestion, so the Continuity screen shows
-   * the difference between "not settled yet" and "a machine proposed this". */
-  const iyoRecord = S.get(iyo.id);
-  if (iyoRecord) await S.patch(iyo.id, { canon: 'suggested' });
+  /* One record left as an outright AI suggestion, so Continuity shows the
+   * difference between "not settled yet" and "a machine proposed this". */
+  await S.patch(fixer.id, { canon: 'suggested' });
 
   await S.create('decision', at({
-    label: 'The reader learns Mara is an echo no earlier than the Cradle scene',
-    rationale: 'The whole back half depends on the reader trusting her narration. '
-      + 'Reveal it early and every scene before it reads as a trick.',
+    label: 'The reader learns the signal names Ines no earlier than the Vault scene',
+    rationale: 'The whole back half depends on the reader trusting her account. Reveal it '
+      + 'early and every scene before it reads as a trick.',
     status: 'locked',
   }));
   await S.create('question', at({
-    text: 'If Mara is a reconstruction, who consented, and to what exactly?',
+    text: 'If the signal predates her posting, who addressed it, and to which Ines?',
     status: 'open',
   }));
   await S.create('idea', at({
-    text: 'What if the Cradle is not storing memory but rehearsing it?',
+    text: 'What if the relay is not storing messages but rehearsing them?',
   }));
 
   await S.snapshotBook(bid, {
     label: 'Draft 0',
-    reason: 'Preserved automatically when the demonstration fixture was created.',
+    reason: 'Preserved automatically when the demonstration project was created.',
   });
 
-  S.setUi({ projectId: pid, bookId: bid, view: 'dashboard', selectionId: null });
   return project;
 }
 
-/* The author's real project. PRD §47: placeholders where information is
- * unknown, never invented answers. An empty Story Bible page with the right
- * headings is worth more than a full one somebody else wrote. */
-export async function seedEchoProject() {
-  const project = await S.createProject({ title: 'ECHO 2084', kind: 'novel' });
-  const bookId = S.books(project.id)[0].id;
-  const at = (f) => ({ projectId: project.id, bookId, ...f });
-
-  await S.create('note', at({
-    slot: 'story', title: 'Premise', canon: 'provisional',
-    body: '[ Placeholder — the author has not provided this yet. ]',
-  }));
-  await S.create('note', at({
-    slot: 'story', title: 'Themes and argument', canon: 'provisional',
-    body: '[ Placeholder — the author has not provided this yet. ]',
-  }));
-  for (const text of [
-    'What is the premise, in one sentence?',
-    'Who is the protagonist and what do they want?',
-    'What does the reader learn last, and why last?',
-    'Standalone novel, or first of a series?',
-  ]) await S.create('question', at({ text, status: 'open' }));
-
-  return project;
-}
-
-/* seedPlatform — the full shape: one worked project, one empty novel, one
- * three-book series. The empty ones are not filler. They are the two cases that
- * break naive outliners: a project with nothing in it yet, and a series whose
- * character and world bibles have to be shared across three books without
- * being copied three times.
- */
-export async function seedPlatform() {
-  const fixture = await seedEcho2084();
-  const echo = await seedEchoProject();
-
-  await S.createProject({ title: 'Future Novel', kind: 'novel' });
-
+/* A three-book series, so series behaviour is demonstrable. Also a demo, also
+ * labelled, also never canon. */
+export async function seedDemoSeries() {
   const series = await S.createProject({
-    title: 'Future Series', kind: 'series', bookCount: 3,
+    title: `Example Series${DEMO_SUFFIX}`, kind: 'series', bookCount: 3,
   });
-
-  /* One shared entity, to make the series-scope mechanic visible immediately:
-   * bookId === null means it belongs to every book in the project. */
   await S.create('entity', {
     projectId: series.id,
     bookId: null,
     kind: 'concept',
+    canon: 'provisional',
     name: 'Series spine',
     summary: 'The question all three books re-ask. Shared, not copied — edit it once.',
   });
 
-  /* Open on the fixture, because it is the one that demonstrates anything. */
+  /* createProject scaffolds a chapter, a scene and a Draft 0 note per book, and
+   * those default to canon like anything a human makes. Demo content never does,
+   * so they are demoted here — otherwise the fixture would be asserting that
+   * invented scaffolding is established fact. */
+  const demoted = ['book', 'chapter', 'scene', 'note']
+    .flatMap((type) => S.list(type))
+    .filter((r) => r.projectId === series.id && r.canon !== 'provisional')
+    .map((r) => ({ id: r.id, canon: 'provisional' }));
+  if (demoted.length) await S.patchMany(demoted);
+
+  return series;
+}
+
+/* What the "Load demo" affordance runs. PRD §53: optional, explicit, and never
+ * applied to a new account automatically. */
+export async function seedPlatform() {
+  const demo = await seedDemo();
+  const series = await seedDemoSeries();
   S.setUi({
-    projectId: fixture.id,
-    bookId: S.books(fixture.id)[0]?.id ?? null,
+    projectId: demo.id,
+    bookId: S.books(demo.id)[0]?.id ?? null,
     view: 'dashboard',
     selectionId: null,
   });
-  return { fixture, echo };
+  return { demo, series };
 }

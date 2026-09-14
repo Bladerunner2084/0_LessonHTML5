@@ -59,10 +59,10 @@ try {
   check('it opens from file:// with no server', await page.locator('.tree-head h1').count() === 1);
   check('it requests nothing from the network', requests.length === 0, requests.join(', '));
 
-  await page.getByRole('button', { name: 'Sample' }).click();
+  await page.getByRole('button', { name: 'Load demo', exact: true }).click();
   await page.waitForTimeout(900);
-  check('the sample loads offline',
-    (await page.locator('.node.project').count()) === 4);
+  check('the demo loads offline',
+    (await page.locator('.node.project').count()) === 2);
   check('the dashboard computes', await page.locator('.stage-list .stage').count() === 17);
 
   /* The features a buyer is paying for, exercised in the built file rather than
