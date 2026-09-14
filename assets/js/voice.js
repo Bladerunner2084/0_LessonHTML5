@@ -219,6 +219,39 @@ export function shares(entries) {
   }));
 }
 
+/* PRD #2 §24 — the predefined vocabulary. Characteristics, genres and
+ * movements only.
+ *
+ * §23 is a hard policy: no living author's name may appear in any predefined
+ * menu, dropdown, preset, example or autocomplete. None appears below, and a
+ * test asserts it by shape rather than by a banned list — a list of names would
+ * itself be the thing the policy forbids, and would go out of date.
+ *
+ * An author may still type a name into a free-form request. The system's job is
+ * then to translate it into these characteristics rather than to reproduce
+ * anybody's prose. */
+export const LITERARY_CHARACTERISTICS = [
+  'Clear', 'Direct', 'Lyrical', 'Sparse', 'Dense', 'Analytical', 'Observational',
+  'Psychological', 'Introspective', 'Documentary', 'Philosophical', 'Satirical',
+  'Emotionally restrained', 'Emotionally intense', 'Atmospheric', 'Descriptive',
+  'Minimalist',
+];
+
+export const GENRES = [
+  'Literary fiction', 'Science fiction', 'Fantasy', 'Mystery', 'Thriller',
+  'Historical fiction', 'Romance', 'Horror', 'Crime', 'Noir', 'Speculative fiction',
+];
+
+export const MOVEMENTS = [
+  'Classical', 'Elizabethan', 'Victorian', 'Romantic', 'Gothic', 'Modernist',
+  'Naturalist', 'Hardboiled', 'Stream of consciousness', 'Epistolary',
+  'Magical realism',
+];
+
+export const STYLE_VOCABULARY = [
+  ...LITERARY_CHARACTERISTICS, ...GENRES, ...MOVEMENTS,
+];
+
 /* The named profiles ship EMPTY. Every one of these carries a craft note and no
  * numbers, because publishing invented genre averages would be fabricating
  * research and a writer would have no way to tell. The numbers arrive when the

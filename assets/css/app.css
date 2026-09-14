@@ -743,3 +743,28 @@ textarea { resize: vertical; }
 .import-file { margin: .6rem 0; font-size: 13px; }
 .import-report { margin: .5rem 0; font-size: 13.5px; }
 .import-preview { list-style: none; margin: .5rem 0; padding: 0; display: grid; gap: .1rem; font-size: 13px; }
+
+/* ---------------------------------------------------- publishing centre */
+
+.publish-split { grid-template-columns: 220px minmax(0, 1fr); }
+.publish-steps { padding: .5rem 0; }
+.publish-steps .list-item { font: 12px/1.6 var(--mono); letter-spacing: .04em; }
+.publish-panel { overflow-y: auto; }
+
+.check-rows { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .3rem; }
+.check-rows li {
+  display: grid; grid-template-columns: 1.2rem minmax(8rem, 14rem) minmax(0, 1fr) auto;
+  gap: .6rem; align-items: baseline; padding: .3rem .6rem;
+  border-left: 2px solid var(--line); font-size: 13.5px;
+}
+.check-rows li.good { border-left-color: var(--accent); }
+.check-rows li.warn { border-left-color: var(--warn); }
+.check-rows li.bad { border-left-color: var(--bad); }
+.check-mark { font: 13px/1 var(--mono); }
+.check-rows li.good .check-mark { color: var(--accent); }
+.check-rows li.warn .check-mark { color: var(--warn); }
+.check-rows li.bad .check-mark { color: var(--bad); }
+.check-label { font-weight: 600; }
+.check-detail { font-size: 12.5px; }
+
+@media (max-width: 900px) { .publish-split { grid-template-columns: 1fr; } }

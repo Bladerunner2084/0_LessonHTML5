@@ -62,7 +62,7 @@ const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world',
 const HEADINGS = ['The Last Signal', 'Draft 0', 'Draft Vault', 'Story Bible', 'Character Bible',
   'World Bible', 'Timeline', 'Revelation Map', 'Chapter Map', 'Scene Map', 'Manuscript',
   'Screenplay', 'Style Studio', 'Reader Simulator', 'Continuity', 'Decision Log',
-  'Questions & Ideas', 'Publication'];
+  'Questions & Ideas', 'Publishing Center'];
 
 const results = [];
 let passed = 0;
@@ -213,7 +213,54 @@ try {
 
   /* Publication: three routes, and a readiness gate that cannot be ticked. */
   await page.locator('.tree-sections .section').nth(SECTIONS.indexOf('publish')).click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(300);
+
+  /* PRD #2 §40 — the production desk opens on validation. */
+  check('the publishing centre opens on computed validation',
+    await page.locator('.check-rows li').count() >= 12);
+  check('the verdict describes Writeline’s own checks, never publishability',
+    /WRITELINE CHECKS PASSED|REVIEW SUGGESTED|ACTION REQUIRED/
+      .test(await page.locator('.view-head .tally').innerText()));
+  check('a planted contradiction blocks the overall verdict',
+    (await page.locator('.view-head .tally').innerText()).includes('ACTION REQUIRED'));
+
+  await page.locator('.publish-steps .list-item', { hasText: 'Book Information' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.detail input').first().fill('The Last Signal');
+  await page.waitForTimeout(500);
+  check('book information persists as a record',
+    (await page.locator('.detail input').first().inputValue()) === 'The Last Signal');
+
+  await page.locator('.publish-steps .list-item', { hasText: 'Front & Back' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.chip', { hasText: 'Dedication' }).click();
+  await page.waitForTimeout(400);
+  check('a front-matter section can be added from the presets',
+    await page.locator('.stack .card').count() >= 1);
+
+  await page.locator('.publish-steps .list-item', { hasText: 'Export' }).click();
+  await page.waitForTimeout(300);
+  check('EPUB and DOCX are offered as real exports',
+    await page.getByRole('button', { name: 'EPUB' }).count() === 1
+    && await page.getByRole('button', { name: 'DOCX' }).count() === 1);
+
+  await page.locator('.publish-steps .list-item', { hasText: 'Candidates' }).click();
+  await page.waitForTimeout(300);
+  const candidateAnswers = ['Browser candidate'];
+  const onCandidate = async (d) => {
+    const next = candidateAnswers.shift();
+    if (next === undefined) { await d.dismiss(); return; }
+    await d.accept(next);
+  };
+  page.on('dialog', onCandidate);
+  await page.getByRole('button', { name: '+ Create candidate' }).click();
+  await page.waitForTimeout(600);
+  page.off('dialog', onCandidate);
+  check('a publication candidate is recorded with its checks',
+    (await page.locator('.stack .card').innerText()).includes('checks passed'));
+
+  await page.locator('.publish-steps .list-item', { hasText: 'Route' }).click();
+  await page.waitForTimeout(300);
   check('publication offers all four routes, direct-to-reader included',
     await page.locator('.pathway').count() === 4);
   check('the direct route promises the app stays out of the money',

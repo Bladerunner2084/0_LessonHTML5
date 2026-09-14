@@ -18,7 +18,18 @@
 export const RECORD_TYPES = [
   'project', 'book', 'entity', 'beat', 'revelation', 'chapter', 'scene', 'note',
   'decision', 'question', 'idea', 'version', 'wordlog', 'submission', 'script',
-  'styleprofile',
+  'styleprofile', 'bookinfo', 'matter', 'publication',
+];
+
+/* PRD #2 §10/§11. Offered, never imposed: each is a record the author can
+ * enable, disable, reorder, retitle or delete, and they can write their own. */
+export const FRONT_MATTER = [
+  'Title Page', 'Copyright Page', 'Dedication', 'Epigraph', 'Table of Contents',
+  'Foreword', 'Preface', 'Introduction', 'Author’s Note',
+];
+export const BACK_MATTER = [
+  'Acknowledgments', 'About the Author', 'Other Books', 'Series Information',
+  'Discussion Questions', 'Resources', 'Newsletter Invitation',
 ];
 
 /* PRD §35/§36 — the three routes out of a finished manuscript. The platform
@@ -317,6 +328,61 @@ export const make = {
     mix: [],                // [{ profileId, weight }]
     sampleWords: 0,         // how much prose it was measured from
     measuredAt: '',
+    ...f,
+  }),
+
+  /* PRD §9/§16. One record per book holding everything a distributor asks for.
+   * Deliberately all-optional: the application must not invent an ISBN, a
+   * publisher or a publication date, and AI may only suggest when asked. */
+  bookinfo: (f = {}) => base('bookinfo', {
+    projectId: null,
+    bookId: null,
+    title: '',
+    subtitle: '',
+    author: '',
+    penName: '',
+    series: '',
+    volume: '',
+    edition: '',
+    isbn: '',
+    publisher: '',
+    imprint: '',
+    publicationDate: '',
+    language: 'en',
+    copyrightYear: '',
+    copyrightHolder: '',
+    description: '',
+    shortDescription: '',
+    keywords: [],
+    categories: [],
+    coverName: '',          // the file the author attached, by name only
+    ...f,
+  }),
+
+  /* A front- or back-matter section. */
+  matter: (f = {}) => base('matter', {
+    projectId: null,
+    bookId: null,
+    side: 'front',          // 'front' | 'back'
+    title: 'Untitled section',
+    body: '',
+    enabled: true,
+    order: 0,
+    ...f,
+  }),
+
+  /* PRD §19 — a publication candidate. Immutable once created: `frozen` holds a
+   * serialised copy of what was approved, so editing the manuscript afterwards
+   * cannot reach backwards and change it. */
+  publication: (f = {}) => base('publication', {
+    projectId: null,
+    bookId: null,
+    label: 'Publication Candidate 1.0',
+    words: 0,
+    overall: '',
+    checks: '',
+    info: '',
+    frozen: '',
     ...f,
   }),
 

@@ -64,6 +64,7 @@ node tests/voice.mjs            # 22 tests for the style engine
 node tests/io.mjs               # 17 tests for import and search
 node tests/landing.mjs          # 23 tests for the marketing site
 node tests/api.mjs              # 14 tests pinning the front-end contract
+node tests/publishing.mjs       # 19 tests for readiness, EPUB, DOCX and snapshots
 node tests/browser.mjs          # 78 tests driving the real app in Chromium
 node build.mjs && node tests/dist.mjs   # 10 tests on the built file, offline, via file://
 ```
@@ -414,6 +415,8 @@ assets/js/voice.js          the Style Engine — measurement, blending, drift
 assets/js/import.js         .docx/.txt/.md/.fountain in, chapters and scenes out
 assets/js/search.js         cross-record search, ranked, no index
 assets/js/api.js            one import surface for any front end
+assets/js/zip.js            a ZIP writer in ninety lines, no dependency
+assets/js/publishing.js     readiness, EPUB, DOCX, immutable publication candidates
 assets/js/compile.js        manuscript + bible + timeline compilation
 assets/js/dom.js            a 60-line hyperscript helper instead of a framework
 assets/js/app.js            bootstrap and router
@@ -426,6 +429,8 @@ tests/voice.mjs             22 style measurement, blending and drift tests
 tests/io.mjs                17 import (including a real .docx) and search tests
 tests/landing.mjs           23 marketing-site tests, honesty rules included
 tests/api.mjs               14 front-end contract tests
+tests/publishing.mjs        19 publishing, export and snapshot tests
+docs/prd-2.md               PRD #2 status: what is built, what the backend blocks
 frontend/                   React binding, TypeScript types, a worked component
 tests/browser.mjs           78 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network
@@ -503,6 +508,28 @@ nothing else. `frontend/README.md` maps each prototype view to its engine call.
 computes them. The moment a `.tsx` file hand-writes a continuity check, the logic
 exists twice, the two drift, and the product is back to the failure this
 architecture was built to prevent.
+
+## Publishing Center
+
+Twelve computed readiness checks, book information and metadata, front and back
+matter as reorderable records, immutable publication candidates, and real
+exports: **EPUB 3, DOCX**, Markdown, print-ready HTML and plain text.
+
+EPUB and DOCX are ZIP archives of XML, so `assets/js/zip.js` writes ZIP directly —
+CRC-32 verified against the standard check value, mimetype first as the EPUB
+specification demands. No dependency, because the application still has to build
+into one file that opens with no package manager. The DOCX is verified by a round
+trip through this application's own `.docx` importer: if our reader cannot read
+what our writer produced, Word probably cannot either.
+
+PDF is produced by printing the print-ready HTML. Embedding a PDF engine would
+cost megabytes in a product whose selling point is one file, and a generated PDF
+that quietly gets its margins wrong is worse than none.
+
+**The verdict never claims publishability.** It can only say `WRITELINE CHECKS
+PASSED`, `REVIEW SUGGESTED` or `ACTION REQUIRED`, and a test fails the build if it
+ever reads like a guarantee. The overall state is the worst row, so one open
+contradiction is not averaged away by nine green ones.
 
 ## The marketing site
 

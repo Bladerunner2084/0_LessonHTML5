@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import {
   measure, compare, describe, blend, shares,
   METRIC_KEYS, METRICS, MIN_SAMPLE, STARTER_PROFILES,
+  STYLE_VOCABULARY, LITERARY_CHARACTERISTICS, GENRES, MOVEMENTS,
 } from '../assets/js/voice.js';
 
 let passed = 0;
@@ -195,6 +196,34 @@ test('the starter profiles ship with craft notes and no invented numbers', () =>
       `${p.name} ships with numbers — that would be fabricated research`);
   }
   assert.ok(STARTER_PROFILES.some((p) => p.name === 'My Default Author Voice'));
+});
+
+/* PRD #2 §23 and §50.20. Tested by SHAPE, not against a list of names: a list
+ * of living authors would itself be the thing the policy forbids, and it would
+ * go out of date the moment someone died. A predefined style option must read
+ * as a characteristic, a genre or a movement — never as a person. */
+test('no predefined style option can be read as a person’s name', () => {
+  const PERSON_SHAPE = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/;      // "Firstname Lastname"
+  const INITIAL_SHAPE = /\b[A-Z]\.\s*[A-Z]/;                  // "G. K." / "J.R.R."
+  const POSSESSIVE = /[A-Z][a-z]+['’]s\b/;                     // "Orwell's"
+
+  for (const option of STYLE_VOCABULARY) {
+    assert.ok(!PERSON_SHAPE.test(option), `"${option}" reads as a personal name`);
+    assert.ok(!INITIAL_SHAPE.test(option), `"${option}" reads as initials`);
+    assert.ok(!POSSESSIVE.test(option), `"${option}" is possessive of a name`);
+  }
+  for (const p of STARTER_PROFILES) {
+    assert.ok(!INITIAL_SHAPE.test(p.name), `profile "${p.name}" reads as initials`);
+    assert.ok(!POSSESSIVE.test(`${p.name} ${p.note}`),
+      `profile "${p.name}" attributes a style to a named person`);
+  }
+});
+
+test('the predefined vocabulary covers characteristics, genres and movements', () => {
+  assert.ok(LITERARY_CHARACTERISTICS.length >= 15);
+  assert.ok(GENRES.length >= 10);
+  assert.ok(MOVEMENTS.length >= 10);
+  assert.equal(new Set(STYLE_VOCABULARY).size, STYLE_VOCABULARY.length, 'no duplicates');
 });
 
 test('the minimum sample is large enough to describe a voice, not a passage', () => {

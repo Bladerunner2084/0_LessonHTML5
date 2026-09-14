@@ -192,7 +192,9 @@ export async function move(id, delta) {
     ? scenesOf(record.chapterId)
     : record.type === 'chapter'
       ? chapters(record.bookId)
-      : sortByOrder(list(record.type).filter((r) => r.bookId === record.bookId));
+      : sortByOrder(list(record.type).filter((r) => r.bookId === record.bookId
+        /* Front and back matter are two independent sequences in one type. */
+        && (record.side == null || r.side === record.side)));
 
   const index = siblings.findIndex((s) => s.id === id);
   const target = index + delta;
