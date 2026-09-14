@@ -9,24 +9,19 @@
  */
 
 import assert from 'node:assert/strict';
+import { loadPlaywright, skipMessage } from './playwright.mjs';
+
+const SUITE = 'distribution';
 import { stat } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
-import { createRequire } from 'node:module';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const FILE = join(ROOT, 'dist', 'writeline.html');
 
-async function loadPlaywright() {
-  const require = createRequire(import.meta.url);
-  for (const spec of ['playwright', '/opt/node22/lib/node_modules/playwright/index.mjs']) {
-    try { return spec.startsWith('/') ? await import(spec) : require(spec); } catch { /* next */ }
-  }
-  return null;
-}
 
 const pw = await loadPlaywright();
-if (!pw) { console.log('Playwright not installed — skipping distribution tests.'); process.exit(0); }
+if (!pw) { console.log(skipMessage(SUITE)); process.exit(0); }
 
 const results = [];
 let passed = 0;

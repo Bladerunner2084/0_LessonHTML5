@@ -431,6 +431,9 @@ tests/landing.mjs           23 marketing-site tests, honesty rules included
 tests/api.mjs               14 front-end contract tests
 tests/publishing.mjs        19 publishing, export and snapshot tests
 docs/prd-2.md               PRD #2 status: what is built, what the backend blocks
+docs/spec-gaps.md           shipped features that appear in no PRD
+docs/transfer.md            moving this test build into a clean repository
+tests/playwright.mjs        runtime resolution, so the suites travel
 frontend/                   React binding, TypeScript types, a worked component
 tests/browser.mjs           78 end-to-end tests against a real Chromium
 tests/dist.mjs              10 tests on the built file, loaded from file:// with no network

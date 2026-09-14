@@ -12,25 +12,20 @@
  */
 
 import assert from 'node:assert/strict';
+import { loadPlaywright, skipMessage } from './playwright.mjs';
+
+const SUITE = 'landing';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript' };
 
-async function loadPlaywright() {
-  const require = createRequire(import.meta.url);
-  for (const spec of ['playwright', '/opt/node22/lib/node_modules/playwright/index.mjs']) {
-    try { return spec.startsWith('/') ? await import(spec) : require(spec); } catch { /* next */ }
-  }
-  return null;
-}
 
 const pw = await loadPlaywright();
-if (!pw) { console.log('Playwright not installed — skipping landing tests.'); process.exit(0); }
+if (!pw) { console.log(skipMessage(SUITE)); process.exit(0); }
 
 const server = createServer(async (req, res) => {
   const path = decodeURIComponent(req.url.split('?')[0]);

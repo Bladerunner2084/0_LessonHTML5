@@ -10,14 +10,14 @@
  * nothing to start first and no port to remember.
  */
 
+import { loadPlaywright, skipMessage } from './playwright.mjs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
 
+const SUITE = 'browser';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const PORT = 8123;
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -39,22 +39,9 @@ const server = createServer(async (req, res) => {
 
 /* Playwright may be installed globally rather than as a dependency — this
  * project deliberately has none. Try both before giving up. */
-async function loadPlaywright() {
-  const require = createRequire(import.meta.url);
-  for (const spec of ['playwright', '/opt/node22/lib/node_modules/playwright/index.mjs']) {
-    try {
-      return spec.startsWith('/') ? await import(spec) : require(spec);
-    } catch { /* try the next one */ }
-  }
-  return null;
-}
 
 const pw = await loadPlaywright();
-if (!pw) {
-  console.log('Playwright is not installed — skipping browser tests.');
-  console.log('  npm i -D playwright && npx playwright install chromium');
-  process.exit(0);
-}
+if (!pw) { console.log(skipMessage(SUITE)); process.exit(0); }
 
 const SECTIONS = ['dashboard', 'draft0', 'vault', 'story', 'character', 'world', 'timeline',
   'revelations', 'chapters', 'scenes', 'manuscript', 'screenplay', 'style', 'reader', 'audit',
@@ -72,7 +59,10 @@ function check(name, condition, detail = '') {
   else { results.push(`  FAIL ${name}${detail ? `\n       ${detail}` : ''}`); process.exitCode = 1; }
 }
 
-await new Promise((resolve) => server.listen(PORT, resolve));
+/* Port 0 lets the OS pick a free one, so the suite never collides with a dev
+ * server the next person already has running on a familiar port. */
+await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+const PORT = server.address().port;
 const browser = await pw.chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
